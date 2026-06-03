@@ -98,3 +98,80 @@ This ensures the AI sees exactly the right parts of your CV to answer accurately
 semantic_score = cosine_similarity(cv_embedding, job_embedding)
 keyword_score = len(cv_skills ∩ job_skills) / len(job_skills)
 fit_score = (0.6 * semantic_score + 0.4 * keyword_score) * 100
+
+Returns score + matching skills + missing skills + recommendation.
+
+---
+
+## 🔔 Real‑time Notifications with SSE
+
+- Backend maintains persistent `EventSource` connections.
+- Every minute, background worker checks:
+  - **Inactivity nudge** (no application >3 days) → calls SerpAPI with user’s top skills.
+  - **Upcoming deadlines** (kanban items + to‑dos due within 24h).
+- Pushes JSON notifications to the frontend bell icon.
+- No polling – instant, efficient, and hackathon‑impressive.
+
+---
+
+## 🧪 Evaluation Suite (Bonus)
+
+We provide **5 documented test cases** (in `/tests`) covering:
+1. CV upload → chunking → embedding storage
+2. Live job search with fit score validation
+3. Fit score accuracy (expected >70% for matching CV)
+4. Cover letter generation (contains skill from CV)
+5. Inactivity nudge (returns 3 job suggestions)
+
+Run with `pnpm test` in backend.
+
+---
+
+## 🏗️ Setup & Installation (using pnpm)
+
+### Prerequisites
+- Node.js 18+
+- `pnpm` installed globally (`npm i -g pnpm`)
+- Supabase account (free tier)
+- Groq API key (free)
+- SerpAPI key (free trial)
+- Hugging Face token (free)
+
+### Clone & Install
+
+```bash
+git clone https://github.com/yourteam/careerpilot.git
+cd careerpilot
+pnpm install   # installs dependencies for frontend & backend (workspaces)
+
+### Environment Variables
+
+Copy `.env.example` to `frontend/.env` and `backend/.env` – fill in your keys.
+
+```bash
+# frontend/.env
+VITE_API_BASE_URL=http://localhost:5001/api
+
+# backend/.env
+PORT=5001
+SUPABASE_URL=your_supabase_url
+SUPABASE_SERVICE_ROLE_KEY=your_service_key
+GROQ_API_KEY=your_groq_key
+SERPAPI_KEY=your_serpapi_key
+HF_TOKEN=your_huggingface_token
+JWT_SECRET=your_jwt_secret
+
+### Database Setup (Supabase)
+
+Run the SQL in the Supabase SQL editor (provided in `docs/schema.sql`). Enables pgvector and creates tables for `cv_chunks`, `kanban_items`, `todos`.
+
+### Run Locally
+
+```bash
+# Terminal 1 – backend
+cd backend
+pnpm dev   # starts on http://localhost:5001
+
+# Terminal 2 – frontend
+cd frontend
+pnpm dev   # starts on http://localhost:5173
