@@ -100,7 +100,7 @@ keyword_score = len(cv_skills ∩ job_skills) / len(job_skills)
 fit_score = (0.6 * semantic_score + 0.4 * keyword_score) * 100
 
 Returns score + matching skills + missing skills + recommendation.
-
+```
 ---
 
 ## 🔔 Real‑time Notifications with SSE
