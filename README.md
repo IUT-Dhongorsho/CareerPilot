@@ -141,9 +141,13 @@ Run with `pnpm test` in backend.
 
 ```bash
 git clone https://github.com/yourteam/careerpilot.git
+```
+```bash
 cd careerpilot
+```
+```bash
 pnpm install   # installs dependencies for frontend & backend (workspaces)
-
+```
 ### Environment Variables
 
 Copy `.env.example` to `frontend/.env` and `backend/.env` – fill in your keys.
@@ -160,7 +164,7 @@ GROQ_API_KEY=your_groq_key
 SERPAPI_KEY=your_serpapi_key
 HF_TOKEN=your_huggingface_token
 JWT_SECRET=your_jwt_secret
-
+```
 ### Database Setup (Supabase)
 
 Run the SQL in the Supabase SQL editor (provided in `docs/schema.sql`). Enables pgvector and creates tables for `cv_chunks`, `kanban_items`, `todos`.
@@ -175,3 +179,4 @@ pnpm dev   # starts on http://localhost:5001
 # Terminal 2 – frontend
 cd frontend
 pnpm dev   # starts on http://localhost:5173
+```
