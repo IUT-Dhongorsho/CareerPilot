@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { errorHandler } from './middleware/error.middleware';
+import cvRoutes from './routes/cvRoutes.js';
 
 import authRoutes from './routes/auth.routes';
 import notificationRoutes from './routes/notification.routes';
@@ -16,6 +17,7 @@ app.use(express.json());
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/cv', cvRoutes);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
