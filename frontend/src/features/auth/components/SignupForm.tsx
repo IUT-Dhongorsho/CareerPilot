@@ -1,9 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { useAuthStore } from '../store/authSlice';
 import { signup } from '../services';
-import { fadeInUp } from '../../../lib/animations';
 
 export default function SignupForm() {
   const [email, setEmail] = useState('');
@@ -30,13 +28,7 @@ export default function SignupForm() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-bg">
-      <motion.div
-        variants={fadeInUp}
-        initial="hidden"
-        animate="visible"
-        exit="exit"
-        className="bg-surface p-8 rounded-lg shadow-md w-96"
-      >
+      <div className="bg-surface p-8 rounded-lg shadow-md w-96">
         <h1 className="text-2xl font-bold text-center mb-6">Create Account</h1>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -70,20 +62,18 @@ export default function SignupForm() {
             />
           </div>
           {error && <p className="text-red-500 text-sm">{error}</p>}
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+          <button
             type="submit"
             disabled={isLoading}
             className="w-full bg-primary text-white py-2 rounded-md hover:bg-primary-dark disabled:opacity-50"
           >
             {isLoading ? 'Creating account...' : 'Sign Up'}
-          </motion.button>
+          </button>
         </form>
         <p className="text-center mt-4 text-sm">
           Already have an account? <Link to="/login" className="text-primary">Login</Link>
         </p>
-      </motion.div>
+      </div>
     </div>
   );
 }

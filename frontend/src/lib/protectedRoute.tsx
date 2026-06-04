@@ -6,6 +6,8 @@ export function ProtectedRoute({ children, requireCV = true }: { children: React
   const { user } = useAuthStore();
   const { isUploaded } = useCVStore();
 
+  console.log('ProtectedRoute:', { user, isUploaded, requireCV });
+
   if (!user) {
     return <Navigate to="/login" replace />;
   }

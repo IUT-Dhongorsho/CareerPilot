@@ -1,9 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { useCVStore } from '../store/cvSlice';
 import { useAuthStore } from '../../auth/store/authSlice';
-import LoadingSpinner from '../../../components/ui/LoadingSpinner';
 
 export default function CVUploader() {
   const [file, setFile] = useState<File | null>(null);
@@ -47,17 +45,12 @@ export default function CVUploader() {
   }
 
   if (isProcessing) {
-    return <LoadingSpinner fullScreen />;
+    return <div className="flex items-center justify-center h-screen">Processing your CV...</div>;
   }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-bg">
-      <motion.div
-        initial={{ scale: 0.95, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.3 }}
-        className="bg-surface p-8 rounded-lg shadow-md w-96 text-center"
-      >
+      <div className="bg-surface p-8 rounded-lg shadow-md w-96 text-center">
         <h1 className="text-2xl font-bold mb-4">Upload Your CV</h1>
         <p className="text-text-muted mb-6">We'll use it to power your AI co-pilot</p>
         <div className="border-2 border-dashed border-border rounded-lg p-6 mb-4">
@@ -69,16 +62,14 @@ export default function CVUploader() {
           />
         </div>
         {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
+        <button
           onClick={handleUpload}
           disabled={!file}
           className="w-full bg-primary text-white py-2 rounded-md hover:bg-primary-dark disabled:opacity-50"
         >
           Upload & Continue
-        </motion.button>
-      </motion.div>
+        </button>
+      </div>
     </div>
   );
 }
