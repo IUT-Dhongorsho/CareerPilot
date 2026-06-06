@@ -3,9 +3,10 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { errorHandler } from './middleware/error.middleware';
 import cvRoutes from './routes/cvRoutes.js';
-
+import jobsRoutes from './routes/jobsRoutes.js';
 import authRoutes from './routes/auth.routes';
 import notificationRoutes from './routes/notification.routes';
+import trackerRoutes from './routes/trackerRoutes.js';
 
 dotenv.config();
 
@@ -18,6 +19,8 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/cv', cvRoutes);
+app.use('/api/jobs', jobsRoutes);
+app.use('/api/tracker', trackerRoutes);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
