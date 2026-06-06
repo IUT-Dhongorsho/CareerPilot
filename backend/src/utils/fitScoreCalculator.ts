@@ -12,7 +12,6 @@ export async function computeFitScore(userId: string, jobDescription: string): P
     const cvWords = new Set(cvText.toLowerCase().split(/\W+/));
     const matching = jobWords.filter(w => cvWords.has(w));
     const score = Math.min(100, Math.round((matching.length / Math.max(1, jobWords.length)) * 100));
-
     return {
       score,
       matchingSkills: matching.slice(0, 5),
