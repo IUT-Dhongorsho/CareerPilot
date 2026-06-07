@@ -7,6 +7,8 @@ import jobsRoutes from './routes/jobsRoutes.js';
 import authRoutes from './routes/auth.routes';
 import notificationRoutes from './routes/notification.routes';
 import trackerRoutes from './routes/trackerRoutes.js';
+import profileRoutes from './routes/profileRoutes.js';
+import interviewRoutes from './routes/interviewRoutes.js';
 
 dotenv.config();
 
@@ -21,6 +23,8 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/cv', cvRoutes);
 app.use('/api/jobs', jobsRoutes);
 app.use('/api/tracker', trackerRoutes);
+app.use('/api/cv', profileRoutes);
+app.use('/api/interview', interviewRoutes);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
