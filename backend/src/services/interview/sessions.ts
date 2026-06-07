@@ -1,6 +1,9 @@
 import { v4 as uuidv4 } from 'uuid';
+import { redis } from '../../config/redis.js';
 
-interface InterviewSession {
+const SESSION_TTL = 3600; // 1 hour in seconds
+
+export interface InterviewSession {
   userId: string;
   jobTitle: string;
   jobDescription: string;
@@ -10,11 +13,9 @@ interface InterviewSession {
   createdAt: number;
 }
 
-const sessions = new Map<string, InterviewSession>();
-
-export function createSession(userId: string, jobTitle: string, jobDescription: string): string {
+export async function createSession(userId: string, jobTitle: string, jobDescription: string): Promise<string> {
   const sessionId = uuidv4();
-  sessions.set(sessionId, {
+  const session: InterviewSession = {
     userId,
     jobTitle,
     jobDescription,
@@ -22,20 +23,24 @@ export function createSession(userId: string, jobTitle: string, jobDescription: 
     currentQuestionIndex: 0,
     answers: [],
     createdAt: Date.now(),
-  });
-  // Auto-clean after 1 hour
-  setTimeout(() => sessions.delete(sessionId), 60 * 60 * 1000);
+  };
+  await redis.setex(`interview:${sessionId}`, SESSION_TTL, JSON.stringify(session));
   return sessionId;
 }
 
-export function getSession(sessionId: string): InterviewSession | undefined {
-  return sessions.get(sessionId);
+export async function getSession(sessionId: string): Promise<InterviewSession | null> {
+  const data = await redis.get(`interview:${sessionId}`);
+  return data ? JSON.parse(data) : null;
 }
 
-export function updateSession(sessionId: string, updates: Partial<InterviewSession>) {
-  const session = sessions.get(sessionId);
+export async function updateSession(sessionId: string, updates: Partial<InterviewSession>): Promise<void> {
+  const session = await getSession(sessionId);
   if (session) {
     Object.assign(session, updates);
-    sessions.set(sessionId, session);
+    await redis.setex(`interview:${sessionId}`, SESSION_TTL, JSON.stringify(session));
   }
+}
+
+export async function deleteSession(sessionId: string): Promise<void> {
+  await redis.del(`interview:${sessionId}`);
 }

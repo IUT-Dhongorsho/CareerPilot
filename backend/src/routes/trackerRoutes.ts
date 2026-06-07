@@ -4,7 +4,7 @@ import {
   getTodos, addTodo, toggleTodo,
   getCalendarEvents,
 } from '../controllers/trackerController.js';
-import { authMiddleware } from '../middleware/authMiddleware.js';
+import { authMiddleware } from '../middleware/auth.middleware.js';
 
 const router = Router();
 router.use(authMiddleware);

@@ -17,7 +17,6 @@ export const startInterview = async (req: Request, res: Response) => {
     const cvChunks = await getUserCVChunks(userId, `interview questions for ${jobTitle}`, 10);
     const cvText = cvChunks.join('\n');
 
-    // Generate first question
     const prompt = `You are an interviewer for a ${jobTitle} position. Based on the candidate's CV: ${cvText} and the job description: ${jobDescription}, ask ONE behavioral or technical question. Keep it concise. Return only the question text.`;
     const completion = await groq.chat.completions.create({
       model: 'llama3-70b-8192',
@@ -26,8 +25,8 @@ export const startInterview = async (req: Request, res: Response) => {
     });
     const firstQuestion = completion.choices[0]?.message?.content || 'Tell me about yourself.';
 
-    const sessionId = createSession(userId, jobTitle, jobDescription);
-    updateSession(sessionId, { questionsAsked: [firstQuestion] });
+    const sessionId = await createSession(userId, jobTitle, jobDescription);
+    await updateSession(sessionId, { questionsAsked: [firstQuestion] });
 
     res.json({ sessionId, question: firstQuestion, questionNumber: 1 });
   } catch (error) {
@@ -43,20 +42,18 @@ export const answerQuestion = async (req: Request, res: Response) => {
     const { sessionId, answer } = req.body;
     if (!sessionId || !answer) return res.status(400).json({ error: 'Missing sessionId or answer' });
 
-    const session = getSession(sessionId);
+    const session = await getSession(sessionId);
     if (!session) return res.status(404).json({ error: 'Session not found' });
     if (session.userId !== userId) return res.status(403).json({ error: 'Unauthorized' });
 
-    // Store answer
     const updatedAnswers = [...session.answers, answer];
     const nextIndex = session.currentQuestionIndex + 1;
-    const isComplete = nextIndex >= 5; // 5 questions max
+    const isComplete = nextIndex >= 5;
 
     let nextQuestion = null;
     let feedback = null;
 
     if (!isComplete) {
-      // Generate feedback on answer and next question
       const cvChunks = await getUserCVChunks(userId, session.jobTitle, 5);
       const cvText = cvChunks.join('\n');
       const prompt = `You are an interviewer. The candidate answered: "${answer}". Provide brief constructive feedback (2 sentences). Then ask the next interview question for a ${session.jobTitle} position. The job description: ${session.jobDescription}. Candidate's CV: ${cvText}. Return JSON: { "feedback": "...", "nextQuestion": "..." }`;
@@ -69,13 +66,12 @@ export const answerQuestion = async (req: Request, res: Response) => {
       feedback = result.feedback;
       nextQuestion = result.nextQuestion;
 
-      updateSession(sessionId, {
+      await updateSession(sessionId, {
         answers: updatedAnswers,
         currentQuestionIndex: nextIndex,
         questionsAsked: [...session.questionsAsked, nextQuestion],
       });
     } else {
-      // Interview complete – generate final summary
       const cvChunks = await getUserCVChunks(userId, session.jobTitle, 5);
       const cvText = cvChunks.join('\n');
       const summaryPrompt = `Based on the interview for ${session.jobTitle}, with questions: ${session.questionsAsked.join(', ')} and answers: ${updatedAnswers.join(', ')}, provide a short evaluation (strengths, areas to improve). Candidate's CV: ${cvText}. Return as plain text.`;
@@ -86,7 +82,7 @@ export const answerQuestion = async (req: Request, res: Response) => {
       });
       feedback = completion.choices[0]?.message?.content || 'Interview completed. Good luck!';
       nextQuestion = null;
-      updateSession(sessionId, { answers: updatedAnswers, currentQuestionIndex: nextIndex });
+      await updateSession(sessionId, { answers: updatedAnswers, currentQuestionIndex: nextIndex });
     }
 
     res.json({
@@ -104,7 +100,7 @@ export const answerQuestion = async (req: Request, res: Response) => {
 export const getSessionState = async (req: Request, res: Response) => {
   const userId = (req as any).user?.id;
   const { sessionId } = req.params;
-  const session = getSession(sessionId);
+  const session = await getSession(sessionId);
   if (!session) return res.status(404).json({ error: 'Session not found' });
   if (session.userId !== userId) return res.status(403).json({ error: 'Unauthorized' });
   res.json({
