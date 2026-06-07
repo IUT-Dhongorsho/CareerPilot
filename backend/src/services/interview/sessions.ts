@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { redis } from '../../config/redis.js';
 
-const SESSION_TTL = 3600; // 1 hour in seconds
+const SESSION_TTL = 7200; // 1 hour in seconds
 
 export interface InterviewSession {
   userId: string;
