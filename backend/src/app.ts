@@ -10,6 +10,7 @@ import jobsRoutes from './routes/jobsRoutes.js';
 import trackerRoutes from './routes/trackerRoutes.js';
 import profileRoutes from './routes/profileRoutes.js';
 import interviewRoutes from './routes/interviewRoutes.js';
+import chatRoutes from './routes/chatRoutes.js';
 
 dotenv.config();
 
@@ -36,6 +37,7 @@ app.use('/api/cv', profileRoutes); // profile and analyze under /api/cv
 app.use('/api/jobs', jobsRoutes);
 app.use('/api/tracker', trackerRoutes);
 app.use('/api/interview', interviewRoutes);
+app.use('/api/chat', chatRoutes);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok' });

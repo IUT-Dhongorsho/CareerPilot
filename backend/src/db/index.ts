@@ -8,5 +8,5 @@ dotenv.config();
 const connectionString = process.env.DATABASE_URL!;
 
 // For migrations and general use
-export const client = postgres(connectionString, { prepare: false });
+export const client = postgres(connectionString, { prepare: false, ssl: 'require' });
 export const db = drizzle(client, { schema });

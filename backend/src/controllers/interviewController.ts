@@ -42,7 +42,7 @@ export const answerQuestion = async (req: Request, res: Response) => {
     const { sessionId, answer } = req.body;
     if (!sessionId || !answer) return res.status(400).json({ error: 'Missing sessionId or answer' });
 
-    const session = await getSession(sessionId);
+    const session = await getSession(sessionId as string);
     if (!session) return res.status(404).json({ error: 'Session not found' });
     if (session.userId !== userId) return res.status(403).json({ error: 'Unauthorized' });
 
@@ -100,7 +100,7 @@ export const answerQuestion = async (req: Request, res: Response) => {
 export const getSessionState = async (req: Request, res: Response) => {
   const userId = (req as any).user?.id;
   const { sessionId } = req.params;
-  const session = await getSession(sessionId);
+  const session = await getSession(sessionId as string);
   if (!session) return res.status(404).json({ error: 'Session not found' });
   if (session.userId !== userId) return res.status(403).json({ error: 'Unauthorized' });
   res.json({
