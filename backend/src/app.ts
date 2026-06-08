@@ -11,6 +11,7 @@ import trackerRoutes from './routes/trackerRoutes.js';
 import profileRoutes from './routes/profileRoutes.js';
 import interviewRoutes from './routes/interviewRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
+import { handleVapiWebhook } from './controllers/vapiController.js';
 
 dotenv.config();
 
@@ -30,6 +31,7 @@ app.use(cors({ origin: process.env.CLIENT_URL || '*' }));
 app.use(express.json());
 
 // Routes
+app.post('/api/webhooks/vapi', handleVapiWebhook);
 app.use('/api/auth', authRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/cv', cvRoutes);

@@ -106,6 +106,20 @@ export const useTrackerStore = create<TrackerState>()(
           todos: state.todos.filter((t) => t.id !== id),
         })),
     }),
-    { name: 'tracker-storage' }
+    { 
+      name: 'tracker-storage',
+      merge: (persistedState: any, currentState) => ({
+        ...currentState,
+        ...(persistedState || {}),
+        kanban: {
+          wishlist: [],
+          applied: [],
+          interviewing: [],
+          offer: [],
+          rejected: [],
+          ...(persistedState?.kanban || {}),
+        },
+      }),
+    }
   )
 );

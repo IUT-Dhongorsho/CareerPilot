@@ -1,4 +1,5 @@
 import { pgTable, text, timestamp, uuid, boolean, jsonb, vector, pgEnum, date } from 'drizzle-orm/pg-core';
+import { relations } from 'drizzle-orm';
 
 export const users = pgTable('users', {
   id: text('id').primaryKey(), // Supabase Auth UID
@@ -62,6 +63,7 @@ export const kanbanItems = pgTable('kanban_items', {
   userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
   jobId: text('job_id'),
   jobTitle: text('job_title').notNull(),
+  jobDescription: text('job_description'),
   company: text('company'),
   salary: text('salary'),
   deadline: date('deadline'),
@@ -92,3 +94,18 @@ export const interviewSessions = pgTable('interview_sessions', {
   summary: jsonb('summary'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
+
+export const interviewSessionsRelations = relations(interviewSessions, ({ one }) => ({
+  user: one(users, {
+    fields: [interviewSessions.userId],
+    references: [users.id],
+  }),
+  job: one(kanbanItems, {
+    fields: [interviewSessions.jobId],
+    references: [kanbanItems.id],
+  }),
+}));
+
+export const kanbanItemsRelations = relations(kanbanItems, ({ many }) => ({
+  interviews: many(interviewSessions),
+}));

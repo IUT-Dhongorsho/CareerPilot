@@ -27,6 +27,7 @@ export const addToKanban = async (req: Request, res: Response) => {
     user_id: userId,
     job_id: job.id,
     job_title: job.title,
+    job_description: job.description,
     company: job.company,
     salary: job.salary,
     deadline: job.deadline,
