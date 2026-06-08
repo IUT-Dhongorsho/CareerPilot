@@ -22,6 +22,13 @@
       "when": 1780927182508,
       "tag": "0002_amazing_ultimo",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1780936641116,
+      "tag": "0003_fixed_vargas",
+      "breakpoints": true
     }
   ]
 }

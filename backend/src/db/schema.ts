@@ -77,3 +77,18 @@ export const todos = pgTable('todos', {
   completed: boolean('completed').default(false).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
+
+// --- Interview Tables ---
+
+export const interviewStatusEnum = pgEnum('interview_status', ['started', 'completed', 'failed']);
+
+export const interviewSessions = pgTable('interview_sessions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  jobId: uuid('job_id').references(() => kanbanItems.id, { onDelete: 'cascade' }).notNull(),
+  vapiCallId: text('vapi_call_id'),
+  status: interviewStatusEnum('status').default('started').notNull(),
+  transcript: text('transcript'),
+  summary: jsonb('summary'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
