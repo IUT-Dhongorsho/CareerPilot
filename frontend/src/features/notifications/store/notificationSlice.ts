@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { getNotificationsReal, markNotificationReadReal, markAllNotificationsReadReal } from '../services/realNotificationsApi';
 
-export interface Notification {
+export interface AppNotification {
   id: string;
   type: string;
   message: string;
@@ -10,16 +10,16 @@ export interface Notification {
 }
 
 interface NotificationState {
-  notifications: Notification[];
+  notifications: AppNotification[];
   unreadCount: number;
   isLoading: boolean;
   fetchNotifications: () => Promise<void>;
-  addNotification: (notification: Notification) => void;
+  addNotification: (notification: AppNotification) => void;
   markAsRead: (id: string) => Promise<void>;
   markAllAsRead: () => Promise<void>;
 }
 
-export const useNotificationStore = create<NotificationState>((set, get) => ({
+export const useNotificationStore = create<NotificationState>((set) => ({
   notifications: [],
   unreadCount: 0,
   isLoading: false,
@@ -30,7 +30,7 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
       const notifications = await getNotificationsReal();
       set({ 
         notifications, 
-        unreadCount: notifications.filter((n: Notification) => !n.isRead).length,
+        unreadCount: notifications.filter((n: AppNotification) => !n.isRead).length,
         isLoading: false 
       });
     } catch (error) {

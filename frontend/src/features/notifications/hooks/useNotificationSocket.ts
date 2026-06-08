@@ -2,7 +2,8 @@ import { useEffect } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { toast } from 'react-toastify';
 import { useAuthStore } from '../../auth/store/authSlice';
-import { useNotificationStore, Notification } from '../store/notificationSlice';
+import { useNotificationStore } from '../store/notificationSlice';
+import type { AppNotification } from '../store/notificationSlice';
 
 const SOCKET_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
 
@@ -20,7 +21,7 @@ export const useNotificationSocket = () => {
       transports: ['websocket'],
     });
 
-    socket.on('notification:new', (notification: Notification) => {
+    socket.on('notification:new', (notification: AppNotification) => {
       addNotification(notification);
       toast.info(notification.message, {
         position: "top-right",

@@ -57,14 +57,15 @@ export const useTrackerStore = create<TrackerState>()(
             if (!column) return state;
             if (column.some(j => j.id === job.id)) return state;
             
-            newKanban[status as keyof typeof newKanban] = [...column, { ...job, createdAt: new Date().toISOString() }];
+            const jobWithDate: Job = { ...job, createdAt: new Date().toISOString() };
+            newKanban[status as keyof typeof newKanban] = [...column, jobWithDate];
             
-            let newCalendarEvents = [...state.calendarEvents];
+            const newCalendarEvents = [...state.calendarEvents];
             if (job.deadline && !newCalendarEvents.some(e => e.id === job.id)) {
               newCalendarEvents.push({ id: job.id, title: `${job.title} deadline`, date: job.deadline });
             }
 
-            let newTodos = [...state.todos];
+            const newTodos = [...state.todos];
             if (status === 'wishlist' || status === 'applied') {
                newTodos.push({ 
                  id: Date.now().toString(), 
@@ -87,7 +88,7 @@ export const useTrackerStore = create<TrackerState>()(
 
       moveJob: async (jobId, from, to, jobTitle) => {
         try {
-          await moveJob(jobId, to, jobTitle);
+          await moveJob(jobId, to, jobTitle || 'Job');
           set((state) => {
             const job = state.kanban[from as keyof typeof state.kanban]?.find((j) => j.id === jobId);
             if (!job) return state;

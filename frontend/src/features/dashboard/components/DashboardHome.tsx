@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { TrendingUp, Building2, FileCheck, CheckCircle2, Briefcase, Target, Calendar } from 'lucide-react';
 import { format, subDays, startOfDay, isSameDay } from 'date-fns';
 import { useMemo } from 'react';
+import type { Job } from '../../jobs/store/jobsSlice';
 
 export default function DashboardHome() {
   const { kanban, todos } = useTrackerStore();
@@ -37,14 +38,14 @@ export default function DashboardHome() {
     ];
 
     return last7Days.map(day => {
-      const count = allJobs.filter(job => {
+      const count = allJobs.filter((job: Job) => {
         const jobDate = job.createdAt ? new Date(job.createdAt) : new Date();
         return isSameDay(startOfDay(jobDate), startOfDay(day));
       }).length;
 
       return {
         date: format(day, 'MMM dd'),
-        count: count || (Math.floor((day.getTime() % 3))) // Deterministic "random" for demo
+        count: count || (Math.floor((day.getTime() % 3))) // Deterministic for demo
       };
     });
   }, [kanban]);

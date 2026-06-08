@@ -1,6 +1,7 @@
 import supabase from '../../../lib/supabase';
 import { useAuthStore } from '../store/authSlice';
 import axiosClient from '../../../lib/api/axiosClient';
+import type { AuthSession } from '../types';
 
 export const signInWithOauth = async (selectedProvider: 'google' | 'github') => {
   const { error } = await supabase.auth.signInWithOAuth({
@@ -12,7 +13,7 @@ export const signInWithOauth = async (selectedProvider: 'google' | 'github') => 
   if (error) throw error;
 };
 
-export const handleAuthCallback = async () => {
+export const handleAuthCallback = async (): Promise<AuthSession | null> => {
   // Supabase automatically parses the hash fragment and sets the session
   const { data: { session }, error } = await supabase.auth.getSession();
   
@@ -30,23 +31,25 @@ export const handleAuthCallback = async () => {
         fullName: session.user.user_metadata?.full_name || session.user.user_metadata?.name,
       });
 
-      // Enrich session with backend info
-      const enrichedSession = {
+      // Enrich user with backend info
+      const hasUploadedCv = syncResponse?.payload?.hasUploadedCv || syncResponse?.hasUploadedCv || false;
+
+      // Store in Auth Store using setAuth which handles simplification
+      useAuthStore.getState().setAuth({
         ...session,
         user: {
           ...session.user,
-          hasUploadedCv: syncResponse?.payload?.hasUploadedCv || syncResponse?.hasUploadedCv || false,
+          hasUploadedCv
         }
-      };
-
-      // Store in Auth Store
-      useAuthStore.getState().setAuth(enrichedSession);
-      return enrichedSession;
+      });
+      
+      // Get the simplified session from store to return consistent types
+      return useAuthStore.getState().session;
     } catch (syncError) {
       console.error('Backend sync failed:', syncError);
       // Still set auth if sync fails? Usually better to have at least Supabase session
       useAuthStore.getState().setAuth(session);
-      return session;
+      return useAuthStore.getState().session;
     }
   }
   

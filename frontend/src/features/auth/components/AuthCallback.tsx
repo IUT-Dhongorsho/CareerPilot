@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { handleAuthCallback } from '../services/oauth';
 import { useAuthStore } from '../store/authSlice';
+import type { AuthSession } from '../types';
 
 export default function AuthCallback() {
   const navigate = useNavigate();
@@ -11,7 +12,7 @@ export default function AuthCallback() {
     const processCallback = async () => {
       try {
         setSyncing(true);
-        const session = await handleAuthCallback();
+        const session: AuthSession | null = await handleAuthCallback();
         
         if (session) {
           if (session.user.hasUploadedCv) {

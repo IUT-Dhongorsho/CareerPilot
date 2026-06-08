@@ -12,6 +12,7 @@ export interface Job {
   link?: string;
   matchingSkills?: string[];
   missingSkills?: string[];
+  createdAt?: string;
 }
 
 interface JobsState {

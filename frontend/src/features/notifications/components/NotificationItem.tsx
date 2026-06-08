@@ -1,9 +1,9 @@
 import { formatDistanceToNow } from 'date-fns';
-import { Bell, Briefcase, CheckCircle, PlusCircle, ArrowRightCircle } from 'lucide-react';
-import type { Notification } from '../store/notificationSlice';
+import { Bell, CheckCircle, PlusCircle, ArrowRightCircle } from 'lucide-react';
+import type { AppNotification } from '../store/notificationSlice';
 
 interface NotificationItemProps {
-  notification: Notification;
+  notification: AppNotification;
   onClick: (id: string) => void;
 }
 
