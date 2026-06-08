@@ -3,24 +3,85 @@
 @theme {
   --color-bg: #f8fafc;
   --color-surface: #ffffff;
+  --color-surface-muted: #f1f5f9;
   --color-primary: #6366f1;
   --color-primary-dark: #4f46e5;
+  --color-primary-light: #818cf8;
+  --color-accent: #06b6d4;
   --color-text: #0f172a;
   --color-text-muted: #64748b;
   --color-border: #e2e8f0;
+  --shadow-glass: 0 8px 32px rgba(0,0,0,0.08);
+  --backdrop-glass: blur(12px);
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
 body {
   background-color: var(--color-bg);
+  font-size: 18px;
+  line-height: 1.5;
   color: var(--color-text);
   font-family: var(--font-sans);
   margin: 0;
 }
+
+h1 { font-size: 2rem; font-weight: 700; }
+h2 { font-size: 1.75rem; font-weight: 600; }
+h3 { font-size: 1.5rem; font-weight: 600; }
+h4 { font-size: 1.25rem; font-weight: 500; }
 
 #root {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: var(--backdrop-glass);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: var(--shadow-glass);
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Increase default text sizes for common elements */
+p, li, button, input, textarea, .card-text {
+  font-size: 1rem;
+}
+
+/* Make glass cards more spacious */
+.glass-card, .card, .kanban-column, .job-card {
+  padding: 1.5rem;
+  border-radius: 1rem;
+}
+
+/* Sidebar and Navbar text sizes */
+.sidebar-item, .nav-item, .header-text {
+  font-size: 1rem;
+}
+
+/* Force FullCalendar to be below dropdowns */
+.fc {
+  z-index: 1;
+  position: relative;
+}
+
+/* Ensure header dropdowns are above all */
+header {
+  z-index: 40;
+  position: relative;
+}
+
+/* Ensure dropdowns appear above all content */
+.dropdown-menu,
+[class*="absolute"][class*="z-50"] {
+  z-index: 9999 !important;
+}
+
 @import 'react-datepicker/dist/react-datepicker.css';

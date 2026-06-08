@@ -6,7 +6,9 @@ interface CVState {
   isProcessing: boolean;
   chunks: string[];
   setProcessing: (processing: boolean) => void;
-  uploadCV: () => Promise<void>;
+  setUploaded: (status: boolean) => void;
+  setChunks: (chunks: string[]) => void;
+  uploadCV: (file?: File) => Promise<void>;
   resetCV: () => void;
 }
 
@@ -17,7 +19,14 @@ export const useCVStore = create<CVState>()(
       isProcessing: false,
       chunks: [],
       setProcessing: (processing) => set({ isProcessing: processing }),
-      uploadCV: async () => {
+      setUploaded: (status) => set({ isUploaded: status }),
+      setChunks: (chunks) => set({ chunks }),
+      uploadCV: async (file) => {
+        set({ isProcessing: true });
+        // Simulating processing if file is provided, otherwise just marking as done
+        if (file) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
         set({ isUploaded: true, isProcessing: false });
       },
       resetCV: () => set({ isUploaded: false, isProcessing: false, chunks: [] }),

@@ -1,7 +1,8 @@
 import axios, { type AxiosInstance, type AxiosRequestConfig } from 'axios';
+import { useAuthStore } from '../../features/auth/store/authSlice';
 
 const axiosClient = axios.create({
-    baseURL: import.meta.env.VITE_BACKEND_URL || 'http://localhost:8005/api',
+    baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
     headers: {
         'Content-Type': 'application/json',
     },
@@ -9,17 +10,9 @@ const axiosClient = axios.create({
 
 axiosClient.interceptors.request.use(
     (config) => {
-        try {
-            const authStorage = localStorage.getItem('auth-storage');
-            if (authStorage) {
-                const { state } = JSON.parse(authStorage);
-                const token = state?.session?.access_token;
-                if (token) {
-                    config.headers.Authorization = `Bearer ${token}`;
-                }
-            }
-        } catch (error) {
-            console.error('Error reading auth-storage from localStorage', error);
+        const token = useAuthStore.getState().session?.access_token;
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
         }
         return config;
     },

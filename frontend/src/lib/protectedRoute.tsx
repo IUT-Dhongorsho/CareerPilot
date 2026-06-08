@@ -1,12 +1,19 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../features/auth/store/authSlice';
+import { useCVStore } from '../features/cv/store/cvSlice';
+import LoadingSpinner from '../components/ui/LoadingSpinner';
 
 export function ProtectedRoute({ children, requireCV = true }: { children: React.ReactNode; requireCV?: boolean }) {
   const { user, isSyncing } = useAuthStore();
+  const { isUploaded } = useCVStore();
   const location = useLocation();
 
   if (isSyncing) {
-    return <div className="flex h-screen items-center justify-center">Loading...</div>;
+    return (
+      <div className="flex h-screen items-center justify-center bg-bg text-text">
+        <LoadingSpinner />
+      </div>
+    );
   }
 
   const isAuthPage = location.pathname === '/login' || location.pathname === '/signup';
@@ -26,18 +33,15 @@ export function ProtectedRoute({ children, requireCV = true }: { children: React
   
   // If user is logged in and tries to access login/signup
   if (isAuthPage) {
-    return <Navigate to={user.hasUploadedCv ? "/dashboard" : "/upload-cv"} replace />;
+    return <Navigate to={isUploaded ? "/dashboard" : "/upload-cv"} replace />;
   }
 
   // 3. CV Requirement Check
   
   // If user HAS NOT uploaded CV and tries to access dashboard
-  if (!user.hasUploadedCv && !isUploadPage) {
+  if (requireCV && !isUploaded && !isUploadPage) {
     return <Navigate to="/upload-cv" replace />;
   }
 
-  // If user HAS uploaded CV and tries to access upload page (unless we want to allow re-upload)
-  // For now, let's allow accessing upload-cv even if they have one, to support "replacement"
-  
   return <>{children}</>;
 }

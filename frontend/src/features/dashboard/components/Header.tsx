@@ -1,11 +1,30 @@
-import { useAuth } from '../../auth/hooks/useAuth';
+import { useState, useRef, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Bell, User, LogOut } from 'lucide-react';
+import { useAuthStore } from '../../auth/store/authSlice';
 import { useCVStore } from '../../cv/store/cvSlice';
-import { useNavigate } from 'react-router-dom';
 
 export default function Header() {
-  const { user, logout } = useAuth();
+  const { user, logout } = useAuthStore();
   const { resetCV } = useCVStore();
   const navigate = useNavigate();
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const notificationRef = useRef<HTMLDivElement>(null);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
+        setShowNotifications(false);
+      }
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setShowUserMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleLogout = async () => {
     await logout();
@@ -14,9 +33,54 @@ export default function Header() {
   };
 
   return (
-    <header className="bg-surface border-b border-border px-6 py-3 flex justify-between items-center">
-      <div className="text-sm text-text-muted">Welcome, {user?.email}</div>
-      <button onClick={handleLogout} className="text-red-500 hover:text-red-700 text-sm">Logout</button>
+    <header className="bg-white/80 backdrop-blur-md border-b border-gray-200 px-6 py-4 flex justify-between items-center shadow-sm relative z-30">
+      <h2 className="text-xl font-semibold text-gray-700">Welcome back, {user?.name || user?.email?.split('@')[0] || 'User'}</h2>
+      <div className="flex items-center gap-5">
+        {/* Notifications */}
+        <div className="relative" ref={notificationRef}>
+          <button
+            onClick={() => setShowNotifications(!showNotifications)}
+            className="p-2 rounded-full hover:bg-gray-100 transition relative"
+          >
+            <Bell size={24} className="text-gray-600" />
+            <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full"></span>
+          </button>
+          {showNotifications && (
+            <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
+              <div className="p-3 border-b border-gray-100 font-semibold">Notifications</div>
+              <div className="p-3 text-sm text-gray-500">No new notifications</div>
+            </div>
+          )}
+        </div>
+        {/* User Menu */}
+        <div className="relative" ref={userMenuRef}>
+          <button
+            onClick={() => setShowUserMenu(!showUserMenu)}
+            className="flex items-center gap-2 p-1 rounded-full hover:bg-gray-100 transition"
+          >
+            <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-semibold text-lg">
+              {user?.name?.[0]?.toUpperCase() || user?.email?.[0].toUpperCase() || 'U'}
+            </div>
+          </button>
+          {showUserMenu && (
+            <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
+              <Link
+                to="/dashboard/profile"
+                className="flex items-center gap-2 px-4 py-2.5 text-base text-gray-700 hover:bg-gray-50"
+                onClick={() => setShowUserMenu(false)}
+              >
+                <User size={18} /> Profile
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 px-4 py-2.5 text-base text-red-600 hover:bg-gray-50 w-full text-left"
+              >
+                <LogOut size={18} /> Logout
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
     </header>
   );
 }

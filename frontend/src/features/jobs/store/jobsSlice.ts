@@ -9,6 +9,8 @@ export interface Job {
   deadline: string;
   fitScore: number;
   description: string;
+  matchingSkills?: string[];
+  missingSkills?: string[];
 }
 
 interface JobsState {
