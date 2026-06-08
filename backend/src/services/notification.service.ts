@@ -15,7 +15,7 @@ webpush.setVapidDetails(
   process.env.VAPID_PRIVATE_KEY!
 );
 
-import { redis } from '../config/redis';
+import { redis } from '../config/redis.js';
 
 export class NotificationService {
   private static transporter = nodemailer.createTransport({

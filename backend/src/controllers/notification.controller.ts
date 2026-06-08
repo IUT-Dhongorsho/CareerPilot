@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
-import { db } from '../db';
+import { db } from '../db/index.js';
 import { notifications } from '../db/schema.js';
 import { eq, desc, and } from 'drizzle-orm';
 import { sendSuccess } from '../utils/apiResponse.js';
