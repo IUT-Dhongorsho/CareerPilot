@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Briefcase, Mail, Lock, UserPlus, User } from 'lucide-react';
 import { useAuthStore } from '../store/authSlice';
 import LottieCharacter from '../../../components/ui/LottieCharacter';
+import supabase from '../../../lib/supabase';
 
 export default function SignupForm() {
   const [fullName, setFullName] = useState('');
@@ -33,6 +34,18 @@ export default function SignupForm() {
       navigate('/upload-cv');
     } catch (err: any) {
       setError(err.message || 'Signup failed');
+    }
+  };
+
+  const signInWithOauth = async (selectedProvider: 'google' | 'github') => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: selectedProvider,
+      options: {
+        redirectTo: import.meta.env.VITE_APP_URL || 'http://localhost:3000',
+      },
+    });
+    if (error) {
+      setError(error.message);
     }
   };
 
@@ -112,8 +125,20 @@ export default function SignupForm() {
             </div>
 
             <div className="flex gap-4">
-              <button className="flex-1 flex items-center justify-center gap-2 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">Google</button>
-              <button className="flex-1 flex items-center justify-center gap-2 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">GitHub</button>
+              <button 
+                type="button"
+                onClick={() => signInWithOauth('google')}
+                className="flex-1 flex items-center justify-center gap-2 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Google
+              </button>
+              <button 
+                type="button"
+                onClick={() => signInWithOauth('github')}
+                className="flex-1 flex items-center justify-center gap-2 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                GitHub
+              </button>
             </div>
 
             <p className="text-center mt-6 text-gray-500">
