@@ -86,7 +86,7 @@ export const sendMessage = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Session not found or access denied' });
     }
 
-    const responseContent = await processMessage(userId, sessionId, content);
+    const responseContent = await processMessage(userId, sessionId as string, content);
     
     res.json({
       role: 'assistant',

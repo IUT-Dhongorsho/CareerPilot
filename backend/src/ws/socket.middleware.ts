@@ -2,7 +2,7 @@ import { Socket } from 'socket.io';
 import { db } from '../db/index.js';
 import { users } from '../db/schema.js';
 import { eq } from 'drizzle-orm';
-import { verifyToken } from '../utils/jwt.js';
+import { supabase } from '../utils/supabase-client.js';
 
 export const socketAuthMiddleware = async (socket: Socket, next: (err?: Error) => void) => {
   try {
@@ -12,14 +12,14 @@ export const socketAuthMiddleware = async (socket: Socket, next: (err?: Error) =
       return next(new Error('Authentication error: No token provided'));
     }
 
-    const decoded: any = await verifyToken(token);
+    const { data: { user: authUser }, error } = await supabase.auth.getUser(token);
 
-    if (!decoded || !decoded.sub) {
+    if (error || !authUser) {
       return next(new Error('Authentication error: Invalid token'));
     }
 
     const user = await db.query.users.findFirst({
-      where: eq(users.id, decoded.sub),
+      where: eq(users.id, authUser.id),
     });
 
     if (!user) {

@@ -3,7 +3,7 @@ import { db } from '../db';
 import { users } from '../db/schema';
 import { eq } from 'drizzle-orm';
 import { sendError } from '../utils/apiResponse';
-import { verifyToken } from '../utils/jwt';
+import { supabase } from '../utils/supabase-client';
 
 export interface AuthRequest extends Request {
   user?: any;
@@ -18,16 +18,16 @@ export const authMiddleware = async (req: AuthRequest, res: Response, next: Next
 
     const token = authHeader.split(' ')[1];
     
-    // Use the modular verification utility
-    const decoded: any = await verifyToken(token);
+    // Verify token using Supabase Auth
+    const { data: { user: authUser }, error } = await supabase.auth.getUser(token);
 
-    if (!decoded || !decoded.sub) {
+    if (error || !authUser) {
       return sendError(res, null, 'Invalid token', 401);
     }
 
     // Verify user exists in our local shadow DB
     const user = await db.query.users.findFirst({
-      where: eq(users.id, decoded.sub),
+      where: eq(users.id, authUser.id),
     });
 
     if (!user) {
