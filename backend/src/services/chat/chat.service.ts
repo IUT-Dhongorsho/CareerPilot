@@ -74,14 +74,10 @@ export async function processMessage(userId: string, sessionId: string, content:
   const condensedQuery = await condenseQuery(history, content);
   console.log(`[ChatService] Condensed Query: ${condensedQuery}`);
 
-  // 3. Expand Query (HyDE)
-  const expandedQuery = await expandQuery(condensedQuery);
-  console.log(`[ChatService] Expanded Query (HyDE): ${expandedQuery}`);
+  // 3. Embed condensed query directly (Removing HyDE for better accuracy)
+  const embedding = await getEmbedding(condensedQuery);
 
-  // 4. Embed expanded query
-  const embedding = await getEmbedding(expandedQuery);
-
-  // 5. Similarity search in cv_chunks
+  // 4. Similarity search in cv_chunks
   const contextChunks = await similaritySearch(userId, embedding);
   const context = contextChunks.length > 0 
     ? contextChunks.join('\n---\n') 
