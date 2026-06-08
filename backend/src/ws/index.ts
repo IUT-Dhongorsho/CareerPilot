@@ -1,6 +1,7 @@
 import { Server, Socket } from 'socket.io';
 import { Server as HttpServer } from 'http';
-import { socketAuthMiddleware } from './socket.middleware';
+import { socketAuthMiddleware } from './socket.middleware.js';
+import * as ChatService from '../services/chat/chat.service.js';
 
 let io: Server;
 
@@ -20,6 +21,25 @@ export const initSocket = (server: HttpServer) => {
 
     // Join a private room for targeted notifications
     socket.join(userId);
+
+    socket.on('chat:send', async (data: { sessionId: string; content: string }) => {
+      try {
+        const { sessionId, content } = data;
+        console.log(`[WS] Message from ${userId} in session ${sessionId}`);
+        
+        const response = await ChatService.processMessage(userId, sessionId, content);
+        
+        socket.emit('chat:receive', {
+          sessionId,
+          role: 'assistant',
+          content: response,
+          createdAt: new Date().toISOString()
+        });
+      } catch (error) {
+        console.error('[WS] Chat error:', error);
+        socket.emit('chat:error', { message: (error as Error).message });
+      }
+    });
 
     socket.on('disconnect', () => {
       console.log(`User disconnected: ${socket.id}`);

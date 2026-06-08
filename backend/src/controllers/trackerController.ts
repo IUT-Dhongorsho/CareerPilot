@@ -12,7 +12,7 @@ export const getKanban = async (req: Request, res: Response) => {
   if (error) return res.status(500).json({ error: error.message });
   const result = { applied: [], interviewing: [], offer: [], rejected: [] };
   data.forEach((item: any) => {
-    result[item.status as keyof typeof result].push(item);
+    ((result as any)[item.status]).push(item);
   });
   res.json(result);
 };

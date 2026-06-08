@@ -25,7 +25,7 @@ export class NotificationController {
     const [updated] = await db
       .update(notifications)
       .set({ isRead: true })
-      .where(and(eq(notifications.id, id), eq(notifications.userId, userId)))
+      .where(and(eq(notifications.id, id as string), eq(notifications.userId, userId)))
       .returning();
 
     sendSuccess(res, updated, 'Notification marked as read');
