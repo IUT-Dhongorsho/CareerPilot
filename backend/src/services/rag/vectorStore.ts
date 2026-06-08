@@ -26,14 +26,15 @@ export async function similaritySearch(userId: string, queryEmbedding: number[],
       similarity: similarity,
     })
     .from(cvChunks)
-    .where(
-      and(
-        eq(cvChunks.userId, userId),
-        gt(similarity, 0.7) // match_threshold
-      )
-    )
+    .where(eq(cvChunks.userId, userId)) // Remove similarity filter for debugging
     .orderBy((t) => desc(t.similarity))
     .limit(topK);
 
-  return results.map((row) => row.chunkText);
+  console.log(`[VectorStore] Debug: Found ${results.length} total chunks for user ${userId}.`);
+  results.forEach((r, i) => {
+    console.log(`  [Chunk ${i}] Similarity: ${r.similarity.toFixed(4)} | Text: ${r.chunkText.substring(0, 50)}...`);
+  });
+
+  const filteredResults = results.filter(r => r.similarity > 0.5);
+  return filteredResults.map((row) => row.chunkText);
 }
