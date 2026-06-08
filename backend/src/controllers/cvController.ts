@@ -3,7 +3,10 @@ import { extractTextFromPDF } from '../utils/pdfParser.js';
 import { extractTextFromDOCX } from '../utils/docxParser.js';
 import { recursiveChunk } from '../services/rag/chunker.js';
 import { getEmbedding } from '../services/rag/embeddings.js';
-import { insertChunk } from '../services/rag/vectorStore.js';
+import { insertChunk, clearUserChunks } from '../services/rag/vectorStore.js';
+import { db } from '../db/index.js';
+import { users } from '../db/schema.js';
+import { eq } from 'drizzle-orm';
 
 export const handleUpload = async (req: Request, res: Response) => {
   try {
@@ -31,11 +34,19 @@ export const handleUpload = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Only PDF, DOCX, or TXT allowed' });
     }
 
+    // Clear old chunks first to allow "replacement"
+    await clearUserChunks(userId);
+
     const chunks = recursiveChunk(text, 500, 50);
     for (const chunk of chunks) {
       const embedding = await getEmbedding(chunk);
       await insertChunk(userId, chunk, embedding);
     }
+
+    // Update user table flag
+    console.log(`Attempting to update hasUploadedCv to true for user: ${userId}`);
+    const updateResult = await db.update(users).set({ hasUploadedCv: true }).where(eq(users.id, userId)).returning();
+    console.log(`Update result for hasUploadedCv:`, updateResult);
 
     res.json({ success: true, chunksCount: chunks.length });
   } catch (error) {

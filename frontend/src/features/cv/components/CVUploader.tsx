@@ -2,18 +2,14 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCVStore } from '../store/cvSlice';
 import { useAuthStore } from '../../auth/store/authSlice';
+import apiClient from '../../../lib/api/axiosClient';
 
 export default function CVUploader() {
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState('');
-  const { uploadCV, isProcessing, isUploaded } = useCVStore();
+  const { uploadCV, isProcessing, setProcessing } = useCVStore();
+  const { user, session, setAuth } = useAuthStore();
   const navigate = useNavigate();
-  const { user } = useAuthStore();
-
-  if (isUploaded) {
-    navigate('/dashboard');
-    return null;
-  }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = e.target.files?.[0];
@@ -32,17 +28,42 @@ export default function CVUploader() {
       return;
     }
     try {
-      await uploadCV(file);
-      navigate('/dashboard');
+      setProcessing(true);
+      const formData = new FormData();
+      formData.append('cv', file);
+
+      // 1. Upload to backend (RAG + update flag in DB)
+      await apiClient.post('/cv/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      // 2. Update local state
+      if (session) {
+        const enrichedSession: any = {
+          ...session,
+          user: {
+            ...session.user,
+            hasUploadedCv: true,
+            user_metadata: {
+              ...session.user.user_metadata,
+              hasUploadedCv: true
+            }
+          },
+        };
+        setAuth(enrichedSession);
+      }
+
+      await uploadCV(); 
+      window.location.href = '/dashboard'; // Force a full reload to ensure AuthProvider fetches fresh DB state
     } catch (err) {
+      console.error('Upload error:', err);
       setError('Upload failed. Please try again.');
+    } finally {
+      setProcessing(false);
     }
   };
-
-  if (!user) {
-    navigate('/login');
-    return null;
-  }
 
   if (isProcessing) {
     return <div className="flex items-center justify-center h-screen">Processing your CV...</div>;

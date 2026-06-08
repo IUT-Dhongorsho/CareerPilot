@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import type { Message } from '../store/chatSlice';
+import type { Message } from '../types';
 
 export default function MessageBubble({ message }: { message: Message }) {
   const isUser = message.role === 'user';

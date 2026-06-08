@@ -4,6 +4,7 @@ import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
 // Some PDFs need external CMAPs for character mapping
 const CMAP_URL = "./node_modules/pdfjs-dist/cmaps/";
 const CMAP_PACKED = true;
+const STANDARD_FONT_DATA_URL = "./node_modules/pdfjs-dist/standard_fonts/";
 
 export const extractTextFromPDF = async (buffer: Buffer): Promise<string> => {
   try {
@@ -12,6 +13,7 @@ export const extractTextFromPDF = async (buffer: Buffer): Promise<string> => {
       data,
       cMapUrl: CMAP_URL,
       cMapPacked: CMAP_PACKED,
+      standardFontDataUrl: STANDARD_FONT_DATA_URL,
     });
 
     const pdfDocument = await loadingTask.promise;
@@ -20,7 +22,7 @@ export const extractTextFromPDF = async (buffer: Buffer): Promise<string> => {
     for (let i = 1; i <= pdfDocument.numPages; i++) {
       const page = await pdfDocument.getPage(i);
       const textContent = await page.getTextContent();
-      const pageText = textContent.items.map((item) => item.str).join(" ");
+      const pageText = textContent.items.map((item) => (item as any).str).join(" ");
       fullText += pageText + "\n";
     }
 

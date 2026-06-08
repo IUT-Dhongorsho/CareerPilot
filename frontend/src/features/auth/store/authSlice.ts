@@ -7,7 +7,9 @@ interface AuthState {
   user: AuthUser | null;
   session: AuthSession | null;
   isLoading: boolean;
+  isSyncing: boolean;
   setAuth: (session: AuthSession | null) => void;
+  setSyncing: (isSyncing: boolean) => void;
   logout: () => void;
 }
 
@@ -17,12 +19,15 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       session: null,
       isLoading: false,
+      isSyncing: true, // Default to true so app waits on initial load
+      setSyncing: (isSyncing) => set({ isSyncing }),
       setAuth: (session) => {
         if (session) {
           const simplifiedUser: AuthUser = {
             email: session.user.email || '',
             name: (session.user as any).user_metadata?.full_name || (session.user as any).name,
             avatar_url: (session.user as any).user_metadata?.avatar_url || (session.user as any).avatar_url,
+            hasUploadedCv: (session.user as any).hasUploadedCv || (session.user as any).user_metadata?.hasUploadedCv,
           };
           
           const simplifiedSession: AuthSession = {

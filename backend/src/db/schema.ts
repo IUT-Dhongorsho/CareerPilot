@@ -5,6 +5,7 @@ export const users = pgTable('users', {
   email: text('email').notNull().unique(),
   fullName: text('full_name'),
   avatarUrl: text('avatar_url'),
+  hasUploadedCv: boolean('has_uploaded_cv').default(false).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });

@@ -1,8 +1,8 @@
 import { Socket } from 'socket.io';
-import jwt from 'jsonwebtoken';
-import { db } from '../db';
-import { users } from '../db/schema';
+import { db } from '../db/index.js';
+import { users } from '../db/schema.js';
 import { eq } from 'drizzle-orm';
+import { verifyToken } from '../utils/jwt.js';
 
 export const socketAuthMiddleware = async (socket: Socket, next: (err?: Error) => void) => {
   try {
@@ -12,7 +12,7 @@ export const socketAuthMiddleware = async (socket: Socket, next: (err?: Error) =
       return next(new Error('Authentication error: No token provided'));
     }
 
-    const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
+    const decoded: any = await verifyToken(token);
 
     if (!decoded || !decoded.sub) {
       return next(new Error('Authentication error: Invalid token'));
@@ -29,6 +29,7 @@ export const socketAuthMiddleware = async (socket: Socket, next: (err?: Error) =
     (socket as any).user = user;
     next();
   } catch (error) {
+    console.error('[SocketAuth] error:', error);
     next(new Error('Authentication error'));
   }
 };
