@@ -1,4 +1,4 @@
-export const mockUploadCV = async (file: File) => {
+export const mockUploadCV = async (_file: File) => {
   await new Promise(resolve => setTimeout(resolve, 1500));
   return { success: true, chunks: ["chunk1", "chunk2"] };
 };

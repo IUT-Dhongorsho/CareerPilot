@@ -4,7 +4,7 @@ export const mockLogin = async (email: string, password: string) => {
   return { user: { id: 'mock-user-1', email }, token: 'mock-jwt-token' };
 };
 
-export const mockSignup = async (email: string, password: string) => {
+export const mockSignup = async (email: string, _password: string) => {
   await new Promise(resolve => setTimeout(resolve, 500));
   return { user: { id: 'mock-user-1', email }, token: 'mock-jwt-token' };
 };

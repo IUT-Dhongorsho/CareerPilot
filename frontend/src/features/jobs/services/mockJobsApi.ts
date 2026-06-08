@@ -1,4 +1,4 @@
-export const searchJobsMock = async (query: string, location?: string) => {
+export const searchJobsMock = async (_query: string, location?: string) => {
   await new Promise(resolve => setTimeout(resolve, 500));
   return [
     { id: '1', title: 'ML Intern', company: 'Google', location: location || 'Dhaka', salary: '$50k', deadline: '2026-06-30', fitScore: 85, description: 'Work on LLMs' },

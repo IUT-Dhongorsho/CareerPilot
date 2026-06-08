@@ -3,7 +3,7 @@ import type { Job } from '../../jobs/store/jobsSlice';
 
 export const getKanbanReal = async () => {
   const res = await axiosClient.get('/tracker/kanban');
-  return res.data;
+  return res;
 };
 
 export const addToKanbanReal = async (job: Job, status: string) => {
@@ -15,13 +15,13 @@ export const moveJobReal = async (jobId: string, fromStatus: string, toStatus: s
 };
 
 export const getTodosReal = async () => {
-  const res = await axiosClient.get('/tracker/todos');
-  return res.data.todos;
+  const res: any = await axiosClient.get('/tracker/todos');
+  return res.todos;
 };
 
 export const addTodoReal = async (text: string, dueDate: string) => {
-  const res = await axiosClient.post('/tracker/todos', { text, dueDate });
-  return res.data.id;
+  const res: any = await axiosClient.post('/tracker/todos', { text, dueDate });
+  return res.id;
 };
 
 export const toggleTodoReal = async (id: string, completed: boolean) => {
@@ -29,6 +29,6 @@ export const toggleTodoReal = async (id: string, completed: boolean) => {
 };
 
 export const getCalendarEventsReal = async () => {
-  const res = await axiosClient.get('/tracker/calendar');
-  return res.data.events;
+  const res: any = await axiosClient.get('/tracker/calendar');
+  return res.events;
 };

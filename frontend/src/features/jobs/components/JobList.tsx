@@ -1,6 +1,6 @@
 import { useJobsStore } from '../store/jobsSlice';
 import JobCard from './JobCard';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 
 export default function JobList() {
   const { results, isLoading } = useJobsStore();

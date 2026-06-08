@@ -1,8 +1,8 @@
 import axiosClient from '../../../lib/api/axiosClient';
 
 export const getNotificationsReal = async () => {
-  const res = await axiosClient.get('/notifications');
-  return res.data.notifications;
+  const res: any = await axiosClient.get('/notifications');
+  return res.notifications;
 };
 
 export const markNotificationReadReal = async (id: string) => {

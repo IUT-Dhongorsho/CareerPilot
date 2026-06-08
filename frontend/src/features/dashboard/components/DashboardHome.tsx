@@ -9,8 +9,8 @@ export default function DashboardHome() {
   const data = [
     { name: 'Wishlist', value: kanban?.wishlist?.length ?? 0, color: '#9ca3af' },
     { name: 'Applied', value: kanban?.applied?.length ?? 0, color: '#3b82f6' },
-    { name: 'Interviewed', value: kanban?.interviewed?.length ?? 0, color: '#eab308' },
-    { name: 'Accepted', value: kanban?.accepted?.length ?? 0, color: '#10b981' },
+    { name: 'Interviewing', value: kanban?.interviewing?.length ?? 0, color: '#eab308' },
+    { name: 'Offer', value: kanban?.offer?.length ?? 0, color: '#10b981' },
     { name: 'Rejected', value: kanban?.rejected?.length ?? 0, color: '#ef4444' },
   ];
   const total = data.reduce((acc, d) => acc + d.value, 0);

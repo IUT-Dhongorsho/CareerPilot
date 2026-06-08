@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Mic, Play, MessageSquare } from 'lucide-react';
+import { Mic, Play } from 'lucide-react';
 
 interface Session {
   id: string;
@@ -16,7 +16,7 @@ const mockSessions: Session[] = [
 ];
 
 export default function MockInterview() {
-  const [sessions, setSessions] = useState(mockSessions);
+  const [sessions] = useState(mockSessions);
   const [activeSession, setActiveSession] = useState<string | null>(null);
   const [messages, setMessages] = useState<{ role: 'user' | 'ai'; content: string }[]>([]);
   const [input, setInput] = useState('');

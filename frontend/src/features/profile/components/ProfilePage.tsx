@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { User, Mail, Award, Briefcase, GraduationCap, Loader2 } from 'lucide-react';
+import { Mail, Loader2 } from 'lucide-react';
 import axiosClient from '../../../lib/api/axiosClient';
 
 export default function ProfilePage() {
@@ -9,7 +9,7 @@ export default function ProfilePage() {
 
   useEffect(() => {
     axiosClient.post('/cv/profile')
-      .then(res => setProfile(res.data.profile))
+      .then((res: any) => setProfile(res.profile))
       .catch(err => console.error(err))
       .finally(() => setLoading(false));
   }, []);

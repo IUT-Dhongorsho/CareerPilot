@@ -1,9 +1,7 @@
 import { useTrackerStore } from '../store/trackerSlice';
-import { useJobsStore } from '../../jobs/store/jobsSlice';
 
 export default function ProgressDashboard() {
   const { kanban, todos } = useTrackerStore();
-  const { results } = useJobsStore();
 
   const totalApplications = kanban.applied.length + kanban.interviewing.length + kanban.offer.length + kanban.rejected.length;
   const completedTodos = todos.filter((t) => t.completed).length;

@@ -24,7 +24,7 @@ export const useJobsStore = create<JobsState>((set) => ({
   results: [],
   isLoading: false,
   setResults: (jobs) => set({ results: jobs }),
-  searchJobs: async (query, location = 'Dhaka') => {
+  searchJobs: async (_query, location = 'Dhaka') => {
     set({ isLoading: true });
     await new Promise(resolve => setTimeout(resolve, 800));
     const mockJobs: Job[] = [

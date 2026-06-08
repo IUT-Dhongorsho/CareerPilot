@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Sphere, Trail, Float, Stars } from '@react-three/drei';
+// @ts-ignore
 import * as THREE from 'three';
 
 function RotatingSphere() {
@@ -39,7 +40,14 @@ function ParticleField() {
   return (
     <points>
       <bufferGeometry>
-        <bufferAttribute attach="attributes-position" count={particleCount} array={positions} itemSize={3} />
+        <bufferAttribute 
+          attach="attributes-position" 
+          count={particleCount} 
+          array={positions} 
+          itemSize={3} 
+          // @ts-ignore
+          args={[positions, 3]}
+        />
       </bufferGeometry>
       <pointsMaterial color="#60a5fa" size={0.05} transparent opacity={0.6} />
     </points>

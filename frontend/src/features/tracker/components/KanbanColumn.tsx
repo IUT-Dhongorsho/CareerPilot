@@ -8,7 +8,7 @@ import type { Job } from '../../jobs/store/jobsSlice';
 import Modal from '../../../components/ui/Modal';
 
 // Mock data for radar chart
-const getRadarData = (jobTitle: string) => [
+const getRadarData = (_jobTitle: string) => [
   { skill: 'Python', value: 85, fullMark: 100 },
   { skill: 'SQL', value: 70, fullMark: 100 },
   { skill: 'Machine Learning', value: 60, fullMark: 100 },
@@ -76,7 +76,7 @@ function ATSFeedback({ job }: { job: Job }) {
   );
 }
 
-function MockInterviewModal({ job, onClose }: { job: Job; onClose: () => void }) {
+function MockInterviewModal({ job, onClose: _onClose }: { job: Job; onClose: () => void }) {
   return (
     <div className="space-y-4">
       <p className="text-gray-700">Mock interview for <strong>{job.title}</strong> at {job.company}</p>
