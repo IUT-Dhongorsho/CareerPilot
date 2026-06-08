@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useAuthStore } from '../../auth/store/authSlice';
 import { useChatStore } from '../store/chatSlice';
@@ -15,6 +15,7 @@ export const useChatSocket = (sessionId: string | null) => {
   const socketRef = useRef<Socket | null>(null);
   const { session } = useAuthStore();
   const { addMessage, setLoading } = useChatStore();
+  const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
     // Only connect if we have a valid session, token, and sessionId
@@ -37,12 +38,9 @@ export const useChatSocket = (sessionId: string | null) => {
     socketRef.current = socket;
 
     // Connection event handlers
-    socket.on('connect', () => {
-      console.log('Connected to chat socket');
-    });
 
     // Listen for incoming messages from the assistant
-    socket.on('chat:receive', (data: { sessionId: string; role: string; content: string; jobResults?: any[] }) => {
+    socket.on('chat:receive', (data: { sessionId: string; role: string; content: string; jobResults?: unknown[] }) => {
       // Ensure the message belongs to the current session
       if (data.sessionId === sessionId) {
         addMessage({
@@ -72,7 +70,11 @@ export const useChatSocket = (sessionId: string | null) => {
 
     socket.on('disconnect', (reason) => {
       console.log('Disconnected from chat socket:', reason);
+      setIsConnected(false);
     });
+
+    // Mark socket as connected on connect
+    socket.on('connect', () => setIsConnected(true));
 
     // Cleanup on unmount or session/token change
     return () => {
@@ -80,6 +82,7 @@ export const useChatSocket = (sessionId: string | null) => {
         socket.disconnect();
       }
       socketRef.current = null;
+      setIsConnected(false);
     };
   }, [session?.access_token, sessionId, addMessage, setLoading]);
 
@@ -94,11 +97,11 @@ export const useChatSocket = (sessionId: string | null) => {
     }
 
     setLoading(true);
-    
+
     // Add user message to the local store immediately for better UX
-    addMessage({ 
-      role: 'user', 
-      content 
+    addMessage({
+      role: 'user',
+      content
     });
 
     // Emit the message to the backend
@@ -107,9 +110,8 @@ export const useChatSocket = (sessionId: string | null) => {
       content,
     });
   }, [sessionId, addMessage, setLoading]);
-
   return {
     sendMessage,
-    isConnected: socketRef.current?.connected || false,
+    isConnected,
   };
 };

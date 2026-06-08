@@ -26,42 +26,42 @@ export const initSocket = (server: HttpServer) => {
     // Join a private room for targeted notifications
     socket.join(userId);
 
-    socket.on('disconnect', async () => {
-      socket.on('chat:send', async (data: { sessionId: string; content: string }) => {
-        try {
-          const { sessionId, content } = data;
-          console.log(`[WS] Message from ${userId} in session ${sessionId}`);
+    // Handle Chat Messages
+    socket.on('chat:send', async (data: { sessionId: string; content: string }) => {
+      try {
+        const { sessionId, content } = data;
+        console.log(`[WS] Message from ${userId} in session ${sessionId}`);
 
-          const response = await ChatService.processMessage(userId, sessionId, content);
+        const response = await ChatService.processMessage(userId, sessionId, content);
 
-          socket.emit('chat:receive', {
-            sessionId,
-            role: 'assistant',
-            content: response,
-            createdAt: new Date().toISOString()
-          });
-        } catch (error) {
-          console.error('[WS] Chat error:', error);
-          socket.emit('chat:error', { message: (error as Error).message });
-        }
-      });
-
-      socket.on('disconnect', () => {
-        console.log(`User disconnected: ${socket.id}`);
-        // Remove online status or set to offline
-        await redis.del(`user:${userId}:status`);
-      });
+        socket.emit('chat:receive', {
+          sessionId,
+          role: 'assistant',
+          content: response,
+          createdAt: new Date().toISOString()
+        });
+      } catch (error) {
+        console.error('[WS] Chat error:', error);
+        socket.emit('chat:error', { message: (error as Error).message });
+      }
     });
 
-    return io;
-  };
+    socket.on('disconnect', async () => {
+      console.log(`User disconnected: ${socket.id}`);
+      // Remove online status or set to offline
+      await redis.del(`user:${userId}:status`);
+    });
+  });
 
-  export const getIO = () => {
-    if (!io) {
-      throw new Error('Socket.io not initialized!');
-    }
-    return io;
-  };
+  return io;
+};
+
+export const getIO = () => {
+  if (!io) {
+    throw new Error('Socket.io not initialized!');
+  }
+  return io;
+};
 
 // 'chatGrok:userId' --persist
 // 'interview:jobId:userId' --1hr
