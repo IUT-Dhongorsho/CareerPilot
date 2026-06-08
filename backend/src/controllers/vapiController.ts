@@ -20,6 +20,16 @@ export const getVapiConfig = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Missing jobId' });
     }
 
+    // Validate jobId format (UUID)
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(jobId)) {
+      console.error('[getVapiConfig] Invalid jobId format:', jobId);
+      return res.status(400).json({ 
+        error: 'Invalid Job ID format', 
+        details: 'The interview feature requires jobs to be saved in your tracker (database). Mock jobs from search results are not supported.' 
+      });
+    }
+
     console.log('[getVapiConfig] Fetching job details...');
     // Fetch job details from kanbanItems table
     const [job] = await db
@@ -30,7 +40,7 @@ export const getVapiConfig = async (req: Request, res: Response) => {
 
     if (!job) {
       console.error('[getVapiConfig] Job not found', { jobId, userId });
-      return res.status(404).json({ error: 'Job not found in your tracker' });
+      return res.status(404).json({ error: 'Job not found in your tracker. Please make sure the job is added to your Kanban board.' });
     }
 
     console.log('[getVapiConfig] Creating interview session...');
@@ -52,10 +62,10 @@ export const getVapiConfig = async (req: Request, res: Response) => {
     const candidateCv = cvChunks.join('\n') || 'No CV information available.';
     console.log(`[getVapiConfig] Found ${cvChunks.length} CV chunks`);
 
-    // Structure response as requested
+    // Structure response as requested by frontend
     const response = {
-      VAPI_PUBLIC_KEY: process.env.VAPI_PUBLIC_KEY,
-      VAPI_ASSISTANT_ID: process.env.VAPI_ASSISTANT_ID,
+      publicKey: process.env.VAPI_PUBLIC_KEY,
+      assistantId: process.env.VAPI_ASSISTANT_ID,
       sessionId: session.id,
       assistantOverride: {
         variableOverrides: {

@@ -7,7 +7,8 @@ export const getKanbanReal = async () => {
 };
 
 export const addToKanbanReal = async (job: Job, status: string) => {
-  await axiosClient.post('/tracker/kanban', { job, status });
+  const res = await axiosClient.post<Job>('/tracker/kanban', { job, status });
+  return res;
 };
 
 export const moveJobReal = async (jobId: string, fromStatus: string, toStatus: string) => {

@@ -1,0 +1,1 @@
+ALTER TABLE "kanban_items" ADD COLUMN "job_description" text;

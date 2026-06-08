@@ -23,18 +23,23 @@ export const addToKanban = async (req: Request, res: Response) => {
 
   const { job, status } = req.body;
   if (!job || !status) return res.status(400).json({ error: 'Missing job or status' });
-  const { error } = await supabase.from('kanban_items').insert({
-    user_id: userId,
-    job_id: job.id,
-    job_title: job.title,
-    job_description: job.description,
-    company: job.company,
-    salary: job.salary,
-    deadline: job.deadline,
-    status,
-  });
+  const { data, error } = await supabase
+    .from('kanban_items')
+    .insert({
+      user_id: userId,
+      job_id: job.id,
+      job_title: job.title,
+      job_description: job.description,
+      company: job.company,
+      salary: job.salary,
+      deadline: job.deadline,
+      status,
+    })
+    .select()
+    .single();
+
   if (error) return res.status(500).json({ error: error.message });
-  res.json({ success: true });
+  res.json(data);
 };
 
 export const moveJob = async (req: Request, res: Response) => {

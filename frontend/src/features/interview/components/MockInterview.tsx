@@ -40,7 +40,11 @@ const VoiceVisualizer = ({ volume, isSpeaking }: VoiceVisualizerProps) => {
 };
 
 export default function MockInterview() {
-  const { kanban } = useTrackerStore();
+  const { kanban, fetchKanban } = useTrackerStore();
+
+  useEffect(() => {
+    fetchKanban();
+  }, [fetchKanban]);
   
   // Defensive check for kanban and its properties
   const rawJobs = kanban ? [
