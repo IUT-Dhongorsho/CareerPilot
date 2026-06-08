@@ -35,3 +35,7 @@ export const getIO = () => {
   }
   return io;
 };
+
+// 'chatGrok:userId' --persist
+// 'interview:jobId:userId' --1hr
+// 'notification:userId' --1hr

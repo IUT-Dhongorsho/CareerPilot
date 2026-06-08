@@ -1,22 +1,34 @@
-import { supabase } from '../../utils/supabase-client.js'; // adjust path to his supabase client if different
+import { db } from '../../db/index.js';
+import { cvChunks } from '../../db/schema.js';
+import { eq, and, cosineDistance, gt, sql, desc } from 'drizzle-orm';
 
 export async function insertChunk(userId: string, chunkText: string, embedding: number[], metadata?: any) {
-  const { error } = await supabase.from('cv_chunks').insert({
-    user_id: userId,
-    chunk_text: chunkText,
+  await db.insert(cvChunks).values({
+    userId,
+    chunkText,
     embedding,
     metadata: metadata || {},
   });
-  if (error) throw error;
 }
 
 export async function similaritySearch(userId: string, queryEmbedding: number[], topK: number = 5) {
-  const { data, error } = await supabase.rpc('match_cv_chunks', {
-    query_embedding: queryEmbedding,
-    match_threshold: 0.7,
-    match_count: topK,
-    p_user_id: userId,
-  });
-  if (error) throw error;
-  return data.map((row: any) => row.chunk_text);
+  // Similarity = 1 - Cosine Distance
+  const similarity = sql<number>`1 - (${cosineDistance(cvChunks.embedding, queryEmbedding)})`;
+
+  const results = await db
+    .select({
+      chunkText: cvChunks.chunkText,
+      similarity: similarity,
+    })
+    .from(cvChunks)
+    .where(
+      and(
+        eq(cvChunks.userId, userId),
+        gt(similarity, 0.7) // match_threshold
+      )
+    )
+    .orderBy((t) => desc(t.similarity))
+    .limit(topK);
+
+  return results.map((row) => row.chunkText);
 }
