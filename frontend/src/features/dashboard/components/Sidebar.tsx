@@ -8,9 +8,9 @@ import { useUIStore } from '../store/uiSlice';
 
 const navItems = [
   { path: '/dashboard/home', name: 'Dashboard', icon: LayoutDashboard, end: true },
-  { path: '/dashboard/apply', name: 'Apply with AI', icon: MessageSquare },
+  // { path: '/dashboard/apply', name: 'Apply with AI', icon: MessageSquare },
   { path: '/dashboard/jobs', name: 'Job Search', icon: Search },
-  { path: '/dashboard/kanban', name: 'Applications', icon: Columns },
+  // { path: '/dashboard/kanban', name: 'Applications', icon: Columns },
   { path: '/dashboard/calendar', name: 'Calendar', icon: Calendar },
   { path: '/dashboard/todo', name: 'To-Do', icon: CheckSquare },
   { path: '/dashboard/progress', name: 'Analytics', icon: BarChart2 },

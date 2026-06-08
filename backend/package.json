@@ -21,7 +21,6 @@
     }
   },
   "dependencies": {
-    "@google/generative-ai": "^0.24.1",
     "@huggingface/transformers": "^4.2.0",
     "@supabase/supabase-js": "^2.107.0",
     "axios": "^1.17.0",

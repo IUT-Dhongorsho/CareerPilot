@@ -1,150 +1,104 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import toast from 'react-hot-toast';
+import axiosClient from '../../../lib/api/axiosClient';
 import type { Job } from '../../jobs/store/jobsSlice';
-import { addToKanban, moveJob, addTodo, toggleTodo } from '../services';
+
+interface KanbanState {
+  wishlist: Job[];
+  applied: Job[];
+  interviewing: Job[];
+  offer: Job[];
+  rejected: Job[];
+}
 
 interface TrackerState {
-  kanban: {
-    wishlist: Job[];
-    applied: Job[];
-    interviewing: Job[];
-    offer: Job[];
-    rejected: Job[];
-  };
-  todos: {
-    id: string;
-    text: string;
-    dueDate: string;
-    completed: boolean;
-  }[];
-  calendarEvents: {
-    id: string;
-    title: string;
-    date: string;
-  }[];
+  kanban: KanbanState;
+  todos: any[];
+  calendarEvents: any[];
+  isLoading: boolean;
+  fetchKanban: () => Promise<void>;
   addToKanban: (job: Job, status: string) => Promise<void>;
-  moveJob: (jobId: string, fromStatus: string, toStatus: string, jobTitle?: string) => Promise<void>;
+  moveJob: (jobId: string, fromStatus: string, toStatus: string) => Promise<void>;
   reorderJobs: (status: string, newJobs: Job[]) => void;
   addTodo: (text: string, dueDate: string) => Promise<void>;
-  toggleTodo: (id: string, text?: string) => Promise<void>;
-  removeTodo: (id: string) => void;
-  setKanban: (kanban: any) => void;
-  setTodos: (todos: any[]) => void;
+  toggleTodo: (id: string, completed: boolean) => Promise<void>;
 }
+
+const initialState: TrackerState = {
+  kanban: { wishlist: [], applied: [], interviewing: [], offer: [], rejected: [] },
+  todos: [],
+  calendarEvents: [],
+  isLoading: false,
+};
 
 export const useTrackerStore = create<TrackerState>()(
   persist(
-    (set) => ({
-      kanban: {
-        wishlist: [],
-        applied: [],
-        interviewing: [],
-        offer: [],
-        rejected: [],
+    (set, get) => ({
+      ...initialState,
+      fetchKanban: async () => {
+        console.log('Fetching Kanban...');
+        set({ isLoading: true });
+        try {
+          const res = await axiosClient.get('/tracker/kanban');
+          // Backend returns the kanban object directly
+          console.log('Kanban response:', res.data);
+          set({ kanban: res.data });
+        } catch (error) {
+          console.error('Failed to fetch Kanban:', error);
+          toast.error('Failed to load Kanban');
+        } finally {
+          set({ isLoading: false });
+        }
       },
-      todos: [],
-      calendarEvents: [],
-      
-      setKanban: (kanban) => set({ kanban }),
-      setTodos: (todos) => set({ todos }),
-
       addToKanban: async (job, status) => {
+        console.log('Adding to Kanban:', job, status);
         try {
-          await addToKanban(job, status);
-          set((state) => {
-            const newKanban = { ...state.kanban };
-            const column = newKanban[status as keyof typeof newKanban];
-            if (!column) return state;
-            if (column.some(j => j.id === job.id)) return state;
-            
-            const jobWithDate: Job = { ...job, createdAt: new Date().toISOString() };
-            newKanban[status as keyof typeof newKanban] = [...column, jobWithDate];
-            
-            const newCalendarEvents = [...state.calendarEvents];
-            if (job.deadline && !newCalendarEvents.some(e => e.id === job.id)) {
-              newCalendarEvents.push({ id: job.id, title: `${job.title} deadline`, date: job.deadline });
-            }
-
-            const newTodos = [...state.todos];
-            if (status === 'wishlist' || status === 'applied') {
-               newTodos.push({ 
-                 id: Date.now().toString(), 
-                 text: `Apply to ${job.title} at ${job.company}`, 
-                 dueDate: job.deadline || '', 
-                 completed: false 
-               });
-            }
-
-            return { 
-              kanban: newKanban,
-              calendarEvents: newCalendarEvents,
-              todos: newTodos
-            };
-          });
-        } catch (error) {
-          console.error('Failed to add to kanban:', error);
-        }
-      },
-
-      moveJob: async (jobId, from, to, jobTitle) => {
-        try {
-          await moveJob(jobId, to, jobTitle || 'Job');
-          set((state) => {
-            const job = state.kanban[from as keyof typeof state.kanban]?.find((j) => j.id === jobId);
-            if (!job) return state;
-            const newFrom = state.kanban[from as keyof typeof state.kanban].filter((j) => j.id !== jobId);
-            const newTo = [...state.kanban[to as keyof typeof state.kanban], job];
-            return {
-              kanban: {
-                ...state.kanban,
-                [from]: newFrom,
-                [to]: newTo,
-              },
-            };
-          });
-        } catch (error) {
-          console.error('Failed to move job:', error);
-        }
-      },
-
-      reorderJobs: (column, newJobs) =>
-        set((state) => ({
-          kanban: {
-            ...state.kanban,
-            [column]: newJobs,
-          },
-        })),
-
-      addTodo: async (text, dueDate) => {
-        try {
-          const res = await addTodo(text, dueDate);
+          await axiosClient.post('/tracker/kanban', { job, status });
+          toast.success(`Added "${job.title}" to ${status}`);
+          await get().fetchKanban();
+          // Also update calendar and todos locally
           set((state) => ({
-            todos: [...state.todos, { id: res.id || Date.now().toString(), text, dueDate, completed: false }],
+            calendarEvents: [...state.calendarEvents, { id: job.id, title: `${job.title} deadline`, date: job.deadline }],
+            todos: [...state.todos, { id: Date.now().toString(), text: `Apply to ${job.title} at ${job.company}`, dueDate: job.deadline, completed: false }]
           }));
         } catch (error) {
-          console.error('Failed to add todo:', error);
+          console.error('Add to Kanban error:', error);
+          toast.error('Failed to add job');
         }
       },
-
-      toggleTodo: async (id, text) => {
-        set((state) => {
-          const todo = state.todos.find(t => t.id === id);
-          if (!todo) return state;
-          const newCompleted = !todo.completed;
-          
-          // Async call to backend
-          toggleTodo(id, newCompleted, text || todo.text).catch(err => console.error('Sync error:', err));
-          
-          return {
-            todos: state.todos.map((t) => (t.id === id ? { ...t, completed: newCompleted } : t)),
-          };
-        });
+      moveJob: async (jobId, fromStatus, toStatus) => {
+        try {
+          await axiosClient.put('/tracker/kanban/move', { jobId, toStatus });
+          toast.success(`Moved to ${toStatus}`);
+          await get().fetchKanban();
+        } catch (error) {
+          console.error('Move error:', error);
+          toast.error('Move failed');
+        }
       },
-
-      removeTodo: (id) =>
+      reorderJobs: (status, newJobs) => {
         set((state) => ({
-          todos: state.todos.filter((t) => t.id !== id),
-        })),
+          kanban: { ...state.kanban, [status]: newJobs }
+        }));
+      },
+      addTodo: async (text, dueDate) => {
+        try {
+          await axiosClient.post('/tracker/todos', { text, dueDate });
+          toast.success('Todo added');
+          // Optionally refresh todos
+        } catch (error) {
+          toast.error('Failed to add todo');
+        }
+      },
+      toggleTodo: async (id, completed) => {
+        try {
+          await axiosClient.put(`/tracker/todos/${id}`, { completed });
+          set((state) => ({ todos: state.todos.map(t => t.id === id ? { ...t, completed } : t) }));
+        } catch (error) {
+          toast.error('Update failed');
+        }
+      },
     }),
     { name: 'tracker-storage' }
   )

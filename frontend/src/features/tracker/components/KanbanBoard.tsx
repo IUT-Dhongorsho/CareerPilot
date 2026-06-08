@@ -1,6 +1,7 @@
+import { useEffect } from 'react';
 import { DndContext, closestCenter } from '@dnd-kit/core';
-import { arrayMove } from '@dnd-kit/sortable';
 import type { DragEndEvent } from '@dnd-kit/core';
+import { arrayMove } from '@dnd-kit/sortable';
 import { useTrackerStore } from '../store/trackerSlice';
 import KanbanColumn from './KanbanColumn';
 
@@ -20,8 +21,12 @@ const columnColors = {
   rejected: 'border-red-400',
 };
 
-export default function KanbanBoard({ showTitle = true }: { showTitle?: boolean }) {
-  const { kanban, moveJob, reorderJobs } = useTrackerStore();
+export default function KanbanBoard() {
+  const { kanban, moveJob, reorderJobs, fetchKanban } = useTrackerStore();
+
+  useEffect(() => {
+    fetchKanban();
+  }, []);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -33,7 +38,7 @@ export default function KanbanBoard({ showTitle = true }: { showTitle?: boolean 
     let sourceColumn: string | null = null;
     let sourceIndex = -1;
     for (const col of columnIds) {
-      const idx = kanban[col as keyof typeof kanban]?.findIndex((j) => j.id === activeId);
+      const idx = kanban[col as keyof typeof kanban]?.findIndex((j) => j.id === activeId) ?? -1;
       if (idx !== -1) {
         sourceColumn = col;
         sourceIndex = idx;
@@ -43,13 +48,11 @@ export default function KanbanBoard({ showTitle = true }: { showTitle?: boolean 
 
     if (columnIds.includes(overId)) {
       if (sourceColumn && sourceColumn !== overId) {
-        // Find job title for notification
-        const job = kanban[sourceColumn as keyof typeof kanban].find(j => j.id === activeId);
-        moveJob(activeId, sourceColumn, overId, job?.title);
+        moveJob(activeId, sourceColumn, overId);
       }
     } else {
       if (sourceColumn) {
-        let targetIndex = kanban[sourceColumn as keyof typeof kanban].findIndex((j) => j.id === overId);
+        let targetIndex = kanban[sourceColumn as keyof typeof kanban]?.findIndex((j) => j.id === overId) ?? -1;
         if (targetIndex !== -1 && sourceIndex !== -1 && sourceIndex !== targetIndex) {
           const newJobs = arrayMove(kanban[sourceColumn as keyof typeof kanban], sourceIndex, targetIndex);
           reorderJobs(sourceColumn, newJobs);
@@ -59,21 +62,18 @@ export default function KanbanBoard({ showTitle = true }: { showTitle?: boolean 
   };
 
   return (
-    <div className={`${showTitle ? 'p-4' : ''}`}>
-      {showTitle && <h2 className="text-2xl font-bold mb-6 text-gray-800">Job Application Tracker</h2>}
-      <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
-          {columnIds.map((col) => (
-            <KanbanColumn
-              key={col}
-              id={col}
-              title={columnTitles[col as keyof typeof columnTitles]}
-              jobs={kanban[col as keyof typeof kanban]}
-              color={columnColors[col as keyof typeof columnColors]}
-            />
-          ))}
-        </div>
-      </DndContext>
-    </div>
+    <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <div className="flex gap-4 overflow-x-auto pb-4">
+        {columnIds.map((col) => (
+          <KanbanColumn
+            key={col}
+            id={col}
+            title={columnTitles[col as keyof typeof columnTitles]}
+            jobs={kanban?.[col as keyof typeof kanban] || []}
+            color={columnColors[col as keyof typeof columnColors]}
+          />
+        ))}
+      </div>
+    </DndContext>
   );
 }

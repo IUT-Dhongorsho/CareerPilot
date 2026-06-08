@@ -5,7 +5,7 @@ import { useAuthStore } from '../../auth/store/authSlice';
 import { useNotificationStore } from '../store/notificationSlice';
 import type { AppNotification } from '../store/notificationSlice';
 
-const SOCKET_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
+const SOCKET_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:3000';
 
 export const useNotificationSocket = () => {
   const { session } = useAuthStore();

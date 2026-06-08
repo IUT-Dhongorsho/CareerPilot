@@ -1,11 +1,10 @@
 import { motion } from 'framer-motion';
-import { Briefcase, MapPin, DollarSign, Calendar, Star } from 'lucide-react';
+import { Briefcase, MapPin, DollarSign, Calendar, Star, ExternalLink } from 'lucide-react';
 import { useTrackerStore } from '../../tracker/store/trackerSlice';
 import type { Job } from '../store/jobsSlice';
 
 interface JobCardProps {
   job: Job;
-  compact?: boolean;
 }
 
 const getFitColor = (score: number) => {
@@ -14,33 +13,19 @@ const getFitColor = (score: number) => {
   return 'bg-red-100 text-red-700';
 };
 
-export default function JobCard({ job, compact = false }: JobCardProps) {
+export default function JobCard({ job }: JobCardProps) {
   const { addToKanban } = useTrackerStore();
 
   const handleWishlist = () => {
     addToKanban(job, 'wishlist');
   };
 
-  if (compact) {
-    return (
-      <div className="text-sm p-3 glass-card rounded-lg mb-2 flex justify-between items-center">
-        <div>
-          <span className="font-bold">{job.title}</span>
-          <p className="text-xs text-text-muted">{job.company}</p>
-        </div>
-        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${getFitColor(job.fitScore)}`}>
-          {job.fitScore}%
-        </span>
-      </div>
-    );
-  }
-
   return (
     <motion.div
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
       whileHover={{ y: -4 }}
-      className="bg-white rounded-xl shadow-sm hover:shadow-md transition p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 border border-gray-100 mb-4"
+      className="bg-white rounded-xl shadow-sm hover:shadow-md transition p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 border border-gray-100"
     >
       <div className="flex-1 space-y-3">
         <div className="flex items-center gap-4 flex-wrap">
@@ -56,29 +41,21 @@ export default function JobCard({ job, compact = false }: JobCardProps) {
           <span className="flex items-center gap-2"><Calendar size={18} /> {job.deadline}</span>
         </div>
       </div>
-      <div className="mt-4 flex flex-wrap gap-2">
+      <div className="flex gap-3">
+        <a
+          href={job.link || '#'}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition flex items-center gap-2"
+        >
+          <ExternalLink size={16} /> Apply
+        </a>
         <button
           onClick={handleWishlist}
-          className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-700 transition flex items-center gap-2 whitespace-nowrap"
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
         >
           <Star size={16} /> Wishlist
         </button>
-        <button
-          onClick={() => addToKanban(job, 'applied')}
-          className="px-4 py-2 bg-primary/10 text-primary rounded-lg text-sm hover:bg-primary/20 transition flex items-center gap-2 whitespace-nowrap"
-        >
-          + Add to Kanban
-        </button>
-        {job.link && (
-          <a
-            href={job.link}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="px-4 py-2 bg-accent/10 text-accent rounded-lg text-sm hover:bg-accent/20 transition flex items-center gap-2 whitespace-nowrap"
-          >
-            Go to Link ↗
-          </a>
-        )}
       </div>
     </motion.div>
   );

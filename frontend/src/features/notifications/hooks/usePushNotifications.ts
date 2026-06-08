@@ -65,9 +65,9 @@ export const usePushNotifications = () => {
       let subscription = await registration.pushManager.getSubscription();
 
       if (!subscription) {
-        const vapidPublicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+        const vapidPublicKey = import.meta.env.VAPID_PUBLIC_KEY;
         if (!vapidPublicKey) {
-          throw new Error('VITE_VAPID_PUBLIC_KEY is not defined');
+          throw new Error('VAPID_PUBLIC_KEY is not defined');
         }
 
         const convertedVapidKey = urlBase64ToUint8Array(vapidPublicKey);
