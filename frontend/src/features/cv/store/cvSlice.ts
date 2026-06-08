@@ -1,12 +1,13 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import axiosClient from '../../../lib/api/axiosClient';
 
 interface CVState {
   isUploaded: boolean;
   isProcessing: boolean;
   chunks: string[];
   uploadCV: (file: File) => Promise<void>;
+  setUploaded: (status: boolean) => void;
+  setChunks: (chunks: string[]) => void;
   resetCV: () => void;
 }
 
@@ -18,25 +19,17 @@ export const useCVStore = create<CVState>()(
       chunks: [],
       uploadCV: async (file) => {
         set({ isProcessing: true });
-        try {
-          const formData = new FormData();
-          formData.append('cv', file);
-          // Make real API call to backend
-          const response = await axiosClient.post('/cv/upload', formData, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-          });
-          if (response.data.success) {
-            // For now, we don't have chunks from backend; we can fetch them later
-            set({ isUploaded: true, isProcessing: false, chunks: [] });
-          } else {
-            throw new Error('Upload failed');
-          }
-        } catch (error) {
-          console.error('CV upload error:', error);
-          set({ isProcessing: false });
-          throw error;
-        }
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        const mockChunks = [
+          "Experienced software engineer with Python, JavaScript, React, Node.js.",
+          "Worked at Google as a software engineering intern, developed ML models for recommendation systems.",
+          "Education: BSc in Computer Science from BUET, CGPA 3.8.",
+          "Projects: Built a RAG-based chatbot, e-commerce platform, and weather app."
+        ];
+        set({ isUploaded: true, isProcessing: false, chunks: mockChunks });
       },
+      setUploaded: (status) => set({ isUploaded: status }),
+      setChunks: (chunks) => set({ chunks }),
       resetCV: () => set({ isUploaded: false, isProcessing: false, chunks: [] }),
     }),
     { name: 'cv-storage' }

@@ -1,27 +1,27 @@
-import { useState, useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDropzone } from 'react-dropzone';
-import { Upload, FileText, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Briefcase, Upload, FileText, X, CheckCircle, Loader2, ArrowRight, Sparkles } from 'lucide-react';
 import { useCVStore } from '../store/cvSlice';
+import { useAuthStore } from '../../auth/store/authSlice';
 import axiosClient from '../../../lib/api/axiosClient';
 
 export default function CVUploader() {
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
-  const { setChunks, setIsUploaded } = useCVStore();
+  const { setUploaded, setChunks } = useCVStore();
+  const { user } = useAuthStore();
   const navigate = useNavigate();
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const selected = acceptedFiles[0];
-    if (selected && (selected.type === 'application/pdf' || 
-        selected.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
-        selected.type === 'text/plain')) {
+    if (selected && (selected.type === 'application/pdf' || selected.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || selected.type === 'text/plain')) {
       setFile(selected);
       setError(null);
     } else {
-      setError('Only PDF, DOCX, or TXT files are allowed');
+      setError('Please upload a PDF, DOCX, or TXT file');
     }
   }, []);
 
@@ -40,102 +40,110 @@ export default function CVUploader() {
       setError('Please select a file');
       return;
     }
-
     setUploading(true);
     setError(null);
-
     const formData = new FormData();
     formData.append('cv', file);
-
     try {
       const response = await axiosClient.post('/cv/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       if (response.data.success) {
-        setSuccess(true);
-        setIsUploaded(true);
-        // In a real scenario, you might get chunks back; here we just set a flag
-        setChunks([]); // or store chunks if returned
-        setTimeout(() => navigate('/dashboard'), 1500);
+        setUploaded(true);
+        if (response.data.chunks) setChunks(response.data.chunks);
+        navigate('/dashboard');
       } else {
-        setError('Upload failed. Please try again.');
+        setError(response.data.error || 'Upload failed');
       }
     } catch (err: any) {
-      console.error('Upload error:', err);
-      setError(err.response?.data?.error || 'Failed to upload CV. Please try again.');
+      const msg = err.response?.data?.error || err.message || 'Upload failed';
+      setError(typeof msg === 'string' ? msg : JSON.stringify(msg));
     } finally {
       setUploading(false);
     }
   };
 
+  const removeFile = () => {
+    setFile(null);
+    setError(null);
+  };
+
+  if (!user) {
+    navigate('/login');
+    return null;
+  }
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-white">
-      <div className="max-w-md w-full mx-4">
-        <div className="bg-white rounded-2xl shadow-xl p-8">
-          <h1 className="text-2xl font-bold text-center mb-2 text-gray-800">Upload Your CV</h1>
-          <p className="text-center text-gray-500 mb-6">We'll analyze it to power your job search</p>
-
-          <div
-            {...getRootProps()}
-            className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors
-              ${isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-400'}
-              ${error ? 'border-red-400 bg-red-50' : ''}`}
-          >
-            <input {...getInputProps()} />
-            <Upload className="mx-auto h-12 w-12 text-gray-400 mb-3" />
-            {isDragActive ? (
-              <p className="text-blue-600">Drop your CV here...</p>
-            ) : (
-              <p className="text-gray-600">Drag & drop your CV, or click to select</p>
-            )}
-            <p className="text-xs text-gray-400 mt-2">PDF, DOCX, or TXT (max 10MB)</p>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white flex items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="max-w-2xl w-full bg-white/80 backdrop-blur-md rounded-2xl shadow-xl p-8 border border-blue-100"
+      >
+        <div className="text-center mb-8">
+          <div className="flex justify-center mb-4">
+            <div className="p-3 bg-blue-100 rounded-full">
+              <Briefcase className="w-8 h-8 text-blue-600 animate-pulse" />
+            </div>
           </div>
-
-          {file && (
-            <div className="mt-4 flex items-center justify-between bg-gray-50 rounded-lg p-3">
-              <div className="flex items-center gap-2">
-                <FileText className="h-5 w-5 text-blue-500" />
-                <span className="text-sm text-gray-700 truncate max-w-[200px]">{file.name}</span>
-              </div>
-              <button
-                onClick={() => setFile(null)}
-                className="text-red-500 hover:text-red-700 text-sm"
-              >
-                Remove
-              </button>
-            </div>
-          )}
-
-          {error && (
-            <div className="mt-4 flex items-center gap-2 text-red-600 bg-red-50 rounded-lg p-3">
-              <AlertCircle className="h-5 w-5" />
-              <span className="text-sm">{error}</span>
-            </div>
-          )}
-
-          {success && (
-            <div className="mt-4 flex items-center gap-2 text-green-600 bg-green-50 rounded-lg p-3">
-              <CheckCircle className="h-5 w-5" />
-              <span className="text-sm">CV uploaded successfully! Redirecting...</span>
-            </div>
-          )}
-
-          <button
-            onClick={handleUpload}
-            disabled={!file || uploading || success}
-            className="mt-6 w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-          >
-            {uploading ? (
-              <>
-                <Loader2 className="h-5 w-5 animate-spin" />
-                Uploading...
-              </>
-            ) : (
-              'Upload CV'
-            )}
-          </button>
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">Upload Your CV</h1>
+          <p className="text-gray-500">Let AI analyze your profile and match you with dream jobs</p>
         </div>
-      </div>
+
+        <div
+          {...getRootProps()}
+          className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition ${
+            isDragActive ? 'border-blue-400 bg-blue-50' : 'border-gray-300 hover:border-blue-400 hover:bg-blue-50/50'
+          }`}
+        >
+          <input {...getInputProps()} />
+          <Upload className={`w-12 h-12 mx-auto mb-4 ${isDragActive ? 'text-blue-500' : 'text-gray-400'}`} />
+          {isDragActive ? (
+            <p className="text-blue-600">Drop your CV here...</p>
+          ) : (
+            <p className="text-gray-600">Drag & drop your CV here, or click to select</p>
+          )}
+          <p className="text-xs text-gray-400 mt-2">Supports PDF, DOCX, TXT</p>
+        </div>
+
+        {file && (
+          <div className="mt-4 flex items-center justify-between bg-gray-50 rounded-lg p-3">
+            <div className="flex items-center gap-2">
+              <FileText className="w-5 h-5 text-blue-500" />
+              <span className="text-sm text-gray-700 truncate max-w-xs">{file.name}</span>
+            </div>
+            <button onClick={removeFile} className="text-red-400 hover:text-red-600">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        )}
+
+        {error && (
+          <div className="mt-4 p-3 bg-red-50 text-red-600 rounded-lg text-sm flex items-center gap-2">
+            <X className="w-4 h-4" />
+            {error}
+          </div>
+        )}
+
+        <button
+          onClick={handleUpload}
+          disabled={!file || uploading}
+          className="mt-6 w-full bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        >
+          {uploading ? (
+            <>
+              <Loader2 className="w-5 h-5 animate-spin" />
+              Uploading...
+            </>
+          ) : (
+            <>
+              Upload & Continue
+              <ArrowRight className="w-5 h-5" />
+            </>
+          )}
+        </button>
+      </motion.div>
     </div>
   );
 }
