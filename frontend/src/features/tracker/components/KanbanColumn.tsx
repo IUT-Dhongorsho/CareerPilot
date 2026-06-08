@@ -3,18 +3,42 @@ import { useDroppable } from '@dnd-kit/core';
 import { TrendingUp, Building2, FileCheck, Mic2, GripVertical } from 'lucide-react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Legend } from 'recharts';
 import type { Job } from '../../jobs/store/jobsSlice';
 import Modal from '../../../components/ui/Modal';
 
-// Placeholder components for modals
+// Mock data for radar chart
+const getRadarData = (jobTitle: string) => [
+  { skill: 'Python', value: 85, fullMark: 100 },
+  { skill: 'SQL', value: 70, fullMark: 100 },
+  { skill: 'Machine Learning', value: 60, fullMark: 100 },
+  { skill: 'Docker', value: 30, fullMark: 100 },
+  { skill: 'Communication', value: 80, fullMark: 100 },
+];
+
 function RadarDemo({ job }: { job: Job }) {
+  const data = getRadarData(job.title);
   return (
     <div className="space-y-4">
       <p className="text-center text-gray-600">Skill gap radar for <strong>{job.title}</strong> at {job.company}</p>
-      <div className="bg-gray-100 rounded-lg p-4 text-center">
-        <p className="text-sm">[Radar chart would show: Python (85%), SQL (70%), Docker (30%)]</p>
+      <div className="h-64 w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <RadarChart cx="50%" cy="50%" outerRadius="80%" data={data}>
+            <PolarGrid />
+            <PolarAngleAxis dataKey="skill" tick={{ fontSize: 12 }} />
+            <PolarRadiusAxis angle={30} domain={[0, 100]} />
+            <Radar name="Your Skills" dataKey="value" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.6} />
+            <Legend />
+          </RadarChart>
+        </ResponsiveContainer>
       </div>
-      <p className="text-sm text-gray-500">Suggestions: Improve Docker, learn Kubernetes.</p>
+      <div className="bg-blue-50 p-3 rounded-lg">
+        <p className="text-sm font-semibold">Recommendations:</p>
+        <ul className="text-sm list-disc ml-4">
+          <li>Improve Docker skills (currently 30%)</li>
+          <li>Take a course on Machine Learning (60% → target 80%)</li>
+        </ul>
+      </div>
     </div>
   );
 }
@@ -22,9 +46,12 @@ function RadarDemo({ job }: { job: Job }) {
 function CultureDemo({ job }: { job: Job }) {
   return (
     <div className="space-y-4">
-      <p className="text-gray-700">Culture summary for <strong>{job.company}</strong>:</p>
-      <div className="bg-indigo-50 p-4 rounded-lg">
-        <p className="text-sm">✨ Innovative, fast-paced, collaborative environment. Known for cutting-edge projects and employee development.</p>
+      <p className="text-gray-700">Culture summary for <strong>{job.company}</strong> (based on employee reviews):</p>
+      <div className="bg-indigo-50 p-4 rounded-lg space-y-2">
+        <p className="text-sm">✨ <strong>Innovative:</strong> Encourages cutting-edge projects and R&D.</p>
+        <p className="text-sm">👥 <strong>Collaborative:</strong> Cross-functional teams, open communication.</p>
+        <p className="text-sm">⚡ <strong>Fast-paced:</strong> Agile environment, quick decision making.</p>
+        <p className="text-sm">📈 <strong>Growth:</strong> Strong learning budget and internal mobility.</p>
       </div>
     </div>
   );
@@ -35,10 +62,14 @@ function ATSFeedback({ job }: { job: Job }) {
     <div className="space-y-4">
       <p className="text-gray-700">ATS analysis for <strong>{job.title}</strong> role:</p>
       <div className="bg-purple-50 p-4 rounded-lg">
-        <p className="font-semibold">Score: 72/100</p>
-        <ul className="list-disc ml-5 mt-2 text-sm">
-          <li>Missing keywords: Docker, CI/CD</li>
-          <li>Suggested improvement: Add quantifiable achievements</li>
+        <p className="font-semibold text-lg">Score: 72/100</p>
+        <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
+          <div className="bg-purple-600 h-2.5 rounded-full" style={{ width: '72%' }}></div>
+        </div>
+        <ul className="list-disc ml-5 mt-3 text-sm space-y-1">
+          <li>✅ Strong experience in Python and SQL</li>
+          <li>⚠️ Missing keywords: <strong>Docker, CI/CD, TensorFlow</strong></li>
+          <li>📝 Suggestion: Add quantifiable achievements (e.g., "Improved performance by 30%")</li>
         </ul>
       </div>
     </div>
@@ -50,9 +81,10 @@ function MockInterviewModal({ job, onClose }: { job: Job; onClose: () => void })
     <div className="space-y-4">
       <p>Mock interview for <strong>{job.title}</strong> at {job.company}</p>
       <div className="bg-green-50 p-4 rounded-lg">
-        <p className="text-sm">This feature will start an AI-led interview session. Coming soon.</p>
+        <p className="text-sm">This will start an AI-led interview session. You'll receive questions and feedback in real time.</p>
+        <button className="mt-3 px-4 py-2 bg-green-600 text-white rounded-lg text-sm">Start Interview</button>
+        <p className="text-xs text-gray-500 mt-2">(Demo: full integration coming soon)</p>
       </div>
-      <button onClick={onClose} className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg">Close</button>
     </div>
   );
 }
@@ -66,27 +98,32 @@ function KanbanCard({ job }: KanbanCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: job.id });
   const style = { transform: CSS.Transform.toString(transform), transition };
 
+  const handleButtonClick = (modalType: 'radar' | 'culture' | 'ats' | 'mock', e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent drag event from interfering
+    setModal(modalType);
+  };
+
   return (
     <>
       <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="bg-white rounded-lg p-4 shadow-sm border border-gray-200 mb-3 cursor-grab">
         <div className="flex items-start justify-between gap-3">
-          <div className="flex-1">
+          <div className="flex-1 text-center">
             <h4 className="font-semibold text-gray-800 text-base">{job.title}</h4>
             <p className="text-sm text-gray-500">{job.company}</p>
           </div>
           <GripVertical size={20} className="text-gray-400" />
         </div>
         <div className="grid grid-cols-2 gap-3 mt-4">
-          <button onClick={() => setModal('radar')} className="text-sm flex items-center justify-center gap-2 px-3 py-2 bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100">
+          <button onClick={(e) => handleButtonClick('radar', e)} className="text-sm flex items-center justify-center gap-2 px-3 py-2 bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100">
             <TrendingUp size={16} /> Radar
           </button>
-          <button onClick={() => setModal('culture')} className="text-sm flex items-center justify-center gap-2 px-3 py-2 bg-indigo-50 text-indigo-700 rounded-md hover:bg-indigo-100">
+          <button onClick={(e) => handleButtonClick('culture', e)} className="text-sm flex items-center justify-center gap-2 px-3 py-2 bg-indigo-50 text-indigo-700 rounded-md hover:bg-indigo-100">
             <Building2 size={16} /> Culture
           </button>
-          <button onClick={() => setModal('ats')} className="text-sm flex items-center justify-center gap-2 px-3 py-2 bg-purple-50 text-purple-700 rounded-md hover:bg-purple-100">
+          <button onClick={(e) => handleButtonClick('ats', e)} className="text-sm flex items-center justify-center gap-2 px-3 py-2 bg-purple-50 text-purple-700 rounded-md hover:bg-purple-100">
             <FileCheck size={16} /> ATS
           </button>
-          <button onClick={() => setModal('mock')} className="text-sm flex items-center justify-center gap-2 px-3 py-2 bg-green-50 text-green-700 rounded-md hover:bg-green-100">
+          <button onClick={(e) => handleButtonClick('mock', e)} className="text-sm flex items-center justify-center gap-2 px-3 py-2 bg-green-50 text-green-700 rounded-md hover:bg-green-100">
             <Mic2 size={16} /> Mock
           </button>
         </div>

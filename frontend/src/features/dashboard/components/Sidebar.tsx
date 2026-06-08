@@ -19,14 +19,17 @@ export default function Sidebar() {
 
   return (
     <motion.aside
-      initial={{ width: sidebarCollapsed ? 64 : 256 }}
-      animate={{ width: sidebarCollapsed ? 64 : 256 }}
+      initial={{ width: sidebarCollapsed ? 80 : 280 }}
+      animate={{ width: sidebarCollapsed ? 80 : 280 }}
       transition={{ duration: 0.2, ease: 'easeInOut' }}
       className="bg-white/80 backdrop-blur-md border-r border-gray-200 flex flex-col h-full shadow-sm"
     >
-      <div className="flex items-center justify-between p-4 border-b border-gray-100">
+      <div className="flex items-center justify-between p-5 border-b border-gray-100">
         {!sidebarCollapsed && <span className="font-bold text-blue-600 text-2xl">CareerPilot</span>}
-        <button onClick={toggleSidebar} className="p-2 rounded-md hover:bg-gray-100 transition">
+        <button
+          onClick={toggleSidebar}
+          className="p-2 rounded-md hover:bg-gray-100 transition"
+        >
           {sidebarCollapsed ? <ChevronRight size={24} /> : <ChevronLeft size={24} />}
         </button>
       </div>
@@ -37,13 +40,13 @@ export default function Sidebar() {
             to={item.path}
             end={item.end}
             className={({ isActive }) =>
-              `flex items-center gap-3 px-5 py-3 mx-2 rounded-lg transition ${
+              `flex items-center gap-4 px-5 py-3.5 mx-2 rounded-xl transition ${
                 isActive ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'
               }`
             }
           >
-            <item.icon size={22} />
-            {!sidebarCollapsed && <span className="text-base font-medium">{item.name}</span>}
+            <item.icon size={sidebarCollapsed ? 28 : 22} />
+            {!sidebarCollapsed && <span className="text-base">{item.name}</span>}
           </NavLink>
         ))}
       </nav>

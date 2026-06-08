@@ -1,13 +1,13 @@
 import axios from 'axios';
+import { useAuthStore } from '../../features/auth/store/authSlice';
 
 const axiosClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8005/api',
+  baseURL: import.meta.env.VITE_API_BASE_URL,
   headers: { 'Content-Type': 'application/json' },
 });
 
-// Request interceptor to add auth token
 axiosClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem('auth_token');
+  const token = useAuthStore.getState().session?.access_token;
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }

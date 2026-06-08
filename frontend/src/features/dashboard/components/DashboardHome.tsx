@@ -17,11 +17,11 @@ export default function DashboardHome() {
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
-      <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
+      <h1 className="text-2xl font-bold text-gray-800 text-center">Dashboard</h1>
 
       {/* Kanban Board (horizontal scrollable) */}
       <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 shadow-sm border border-gray-100">
-        <h2 className="text-lg font-semibold mb-3">Application Tracker</h2>
+        <h2 className="text-lg font-semibold mb-3 text-center">Application Tracker</h2>
         <div className="overflow-x-auto">
           <KanbanBoard />
         </div>

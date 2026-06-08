@@ -32,27 +32,27 @@ export default function Header() {
   };
 
   return (
-    <header className="bg-white/80 backdrop-blur-md border-b border-gray-200 px-8 py-5 flex justify-between items-center shadow-sm">
+    <header className="bg-white/80 backdrop-blur-md border-b border-gray-200 px-6 py-4 flex justify-between items-center shadow-sm relative z-30">
       <h2 className="text-xl font-semibold text-gray-700">Welcome back, {user?.email?.split('@')[0] || 'User'}</h2>
-      <div className="flex items-center gap-6">
+      <div className="flex items-center gap-5">
         {/* Notifications */}
-        <div className="relative" ref={notificationRef} style={{ zIndex: 1000 }}>
+        <div className="relative" ref={notificationRef}>
           <button
             onClick={() => setShowNotifications(!showNotifications)}
             className="p-2 rounded-full hover:bg-gray-100 transition relative"
           >
             <Bell size={24} className="text-gray-600" />
-            <span className="absolute top-1 right-1 w-3 h-3 bg-red-500 rounded-full"></span>
+            <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full"></span>
           </button>
           {showNotifications && (
             <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
-              <div className="p-3 border-b border-gray-100 font-semibold text-base">Notifications</div>
+              <div className="p-3 border-b border-gray-100 font-semibold">Notifications</div>
               <div className="p-3 text-sm text-gray-500">No new notifications</div>
             </div>
           )}
         </div>
         {/* User Menu */}
-        <div className="relative" ref={userMenuRef} style={{ zIndex: 1000 }}>
+        <div className="relative" ref={userMenuRef}>
           <button
             onClick={() => setShowUserMenu(!showUserMenu)}
             className="flex items-center gap-2 p-1 rounded-full hover:bg-gray-100 transition"
@@ -65,14 +65,14 @@ export default function Header() {
             <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
               <Link
                 to="/dashboard/profile"
-                className="flex items-center gap-2 px-4 py-2 text-base text-gray-700 hover:bg-gray-50"
+                className="flex items-center gap-2 px-4 py-2.5 text-base text-gray-700 hover:bg-gray-50"
                 onClick={() => setShowUserMenu(false)}
               >
                 <User size={18} /> Profile
               </Link>
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-2 px-4 py-2 text-base text-red-600 hover:bg-gray-50 w-full text-left"
+                className="flex items-center gap-2 px-4 py-2.5 text-base text-red-600 hover:bg-gray-50 w-full text-left"
               >
                 <LogOut size={18} /> Logout
               </button>

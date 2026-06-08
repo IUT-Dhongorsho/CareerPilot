@@ -65,3 +65,32 @@ p, li, button, input, textarea, .card-text {
 .dropdown-menu {
   z-index: 9999 !important;
 }
+
+/* Sidebar and Navbar text sizes */
+.sidebar-item, .nav-item, .header-text {
+  font-size: 1rem;
+}
+
+/* Ensure dropdown menus have high z-index */
+.dropdown-menu {
+  z-index: 1000 !important;
+}
+
+/* Force FullCalendar to be below dropdowns */
+.fc {
+  z-index: 1;
+  position: relative;
+}
+/* Ensure header dropdowns are above all */
+header {
+  z-index: 40;
+  position: relative;
+}
+.dropdown-menu {
+  z-index: 100;
+}
+/* Ensure dropdowns appear above all content */
+.dropdown-menu,
+[class*="absolute"][class*="z-50"] {
+  z-index: 9999 !important;
+}
