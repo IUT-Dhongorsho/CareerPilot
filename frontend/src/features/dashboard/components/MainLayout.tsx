@@ -1,6 +1,7 @@
 import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Navbar from './Header';
+import FloatingChat from '../../../components/ui/FloatingChat';
 
 export default function MainLayout() {
   return (
@@ -12,6 +13,7 @@ export default function MainLayout() {
           <Outlet />
         </main>
       </div>
+      <FloatingChat />
     </div>
   );
 }

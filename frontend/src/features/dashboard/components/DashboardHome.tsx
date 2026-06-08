@@ -2,10 +2,10 @@ import { useTrackerStore } from '../../tracker/store/trackerSlice';
 import KanbanBoard from '../../tracker/components/KanbanBoard';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { motion } from 'framer-motion';
+import { TrendingUp, Building2, FileCheck } from 'lucide-react';
 
 export default function DashboardHome() {
   const { kanban } = useTrackerStore();
-  // Safe fallback if kanban is undefined
   const data = [
     { name: 'Wishlist', value: kanban?.wishlist?.length ?? 0, color: '#9ca3af' },
     { name: 'Applied', value: kanban?.applied?.length ?? 0, color: '#3b82f6' },
@@ -16,13 +16,20 @@ export default function DashboardHome() {
   const total = data.reduce((acc, d) => acc + d.value, 0);
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
       <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
-      <div className="grid lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-white/80 backdrop-blur-sm rounded-xl p-4 shadow-sm border border-gray-100">
-          <h2 className="text-lg font-semibold mb-3">Application Tracker</h2>
+
+      {/* Kanban Board (horizontal scrollable) */}
+      <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 shadow-sm border border-gray-100">
+        <h2 className="text-lg font-semibold mb-3">Application Tracker</h2>
+        <div className="overflow-x-auto">
           <KanbanBoard />
         </div>
+      </div>
+
+      {/* Second row: Stats + Radar */}
+      <div className="grid md:grid-cols-2 gap-6">
+        {/* Stats Pie Chart */}
         <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 shadow-sm border border-gray-100">
           <h2 className="text-lg font-semibold mb-3">Application Stats</h2>
           {total === 0 ? (
@@ -51,6 +58,34 @@ export default function DashboardHome() {
               </div>
             </>
           )}
+        </div>
+
+        {/* Radar Chart (placeholder) */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 shadow-sm border border-gray-100 flex flex-col items-center justify-center">
+          <TrendingUp size={32} className="text-blue-500 mb-2" />
+          <h2 className="text-lg font-semibold mb-2">Skill Gap Radar</h2>
+          <p className="text-sm text-gray-500 text-center">Select a job from Kanban to see radar chart.</p>
+          <button className="mt-3 text-blue-600 text-sm underline">Coming soon</button>
+        </div>
+      </div>
+
+      {/* Third row: Company Culture + ATS Feedback */}
+      <div className="grid md:grid-cols-2 gap-6">
+        <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 shadow-sm border border-gray-100">
+          <div className="flex items-center gap-2 mb-3">
+            <Building2 size={20} className="text-indigo-500" />
+            <h2 className="text-lg font-semibold">Company Culture</h2>
+          </div>
+          <p className="text-sm text-gray-600">Click on a job card in Kanban to view culture summary.</p>
+          <button className="mt-3 text-indigo-600 text-sm underline">Select a job</button>
+        </div>
+        <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 shadow-sm border border-gray-100">
+          <div className="flex items-center gap-2 mb-3">
+            <FileCheck size={20} className="text-purple-500" />
+            <h2 className="text-lg font-semibold">ATS Feedback</h2>
+          </div>
+          <p className="text-sm text-gray-600">Get actionable feedback on your CV for a specific role.</p>
+          <button className="mt-3 text-purple-600 text-sm underline">Analyze CV for role</button>
         </div>
       </div>
     </motion.div>

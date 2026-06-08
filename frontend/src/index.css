@@ -39,3 +39,29 @@ h2 { font-size: 1.5rem; font-weight: 600; }
   background-clip: text;
   color: transparent;
 }
+/* Increase base font size and line height */
+body {
+  font-size: 18px;
+  line-height: 1.5;
+}
+
+/* Make headings larger */
+h1 { font-size: 2rem; font-weight: 700; }
+h2 { font-size: 1.75rem; font-weight: 600; }
+h3 { font-size: 1.5rem; font-weight: 600; }
+h4 { font-size: 1.25rem; font-weight: 500; }
+
+/* Increase default text sizes for common elements */
+p, li, button, input, textarea, .card-text {
+  font-size: 1rem;
+}
+
+/* Make glass cards more spacious */
+.glass-card, .card, .kanban-column, .job-card {
+  padding: 1.5rem;
+  border-radius: 1rem;
+}
+/* Ensure dropdowns appear above other content */
+.dropdown-menu {
+  z-index: 9999 !important;
+}

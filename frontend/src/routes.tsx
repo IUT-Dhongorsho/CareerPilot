@@ -5,8 +5,8 @@ import LoginForm from './features/auth/components/LoginForm';
 import SignupForm from './features/auth/components/SignupForm';
 import CVUploader from './features/cv/components/CVUploader';
 import DashboardLayout from './features/dashboard/components/MainLayout';
-import JobSearch from './features/jobs/components/JobSearch'; // we'll create
-import DashboardHome from './features/dashboard/components/DashboardHome'; // combines Kanban & Todo
+import JobSearch from './features/jobs/components/JobSearch';
+import DashboardHome from './features/dashboard/components/DashboardHome';
 import CalendarView from './features/tracker/components/CalendarView';
 import TodoList from './features/tracker/components/TodoList';
 import MockInterview from './features/interview/components/MockInterview';
@@ -31,14 +31,6 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'profile',
-        element: (
-          <ProtectedRoute requireCV={true}>
-            <ProfilePage />
-          </ProtectedRoute>
-        ),
-      },
-      {
         path: 'dashboard',
         element: (
           <ProtectedRoute requireCV={true}>
@@ -53,6 +45,7 @@ export const router = createBrowserRouter([
           { path: 'todo', element: <TodoList /> },
           { path: 'interview', element: <MockInterview /> },
           { path: 'roadmap', element: <Roadmap /> },
+          { path: 'profile', element: <ProfilePage /> },
         ],
       },
     ],
