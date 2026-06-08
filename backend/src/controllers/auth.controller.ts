@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
-import { AuthService } from '../services/auth.service';
-import { sendSuccess } from '../utils/apiResponse';
-import { syncUserSchema } from '../validators/auth.validator';
+import { AuthService } from '../services/auth.service.js';
+import { sendSuccess } from '../utils/apiResponse.js';
+import { syncUserSchema } from '../validators/auth.validator.js';
 
 export class AuthController {
   static syncUser = asyncHandler(async (req: Request, res: Response) => {

@@ -1,6 +1,6 @@
 import http from 'http';
-import app from './app';
-import { initSocket } from './ws';
+import app from './app.js';
+import { initSocket } from './ws/index.js';
 import * as dotenv from 'dotenv';
 
 dotenv.config();

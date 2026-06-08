@@ -4,9 +4,11 @@ import Sidebar from './Sidebar';
 import Header from './Header';
 import FloatingChat from '../../../components/ui/FloatingChat';
 import { usePushNotifications } from '../../notifications/hooks/usePushNotifications';
+import { useNotificationSocket } from '../../notifications/hooks/useNotificationSocket';
 
 export default function MainLayout() {
   const { requestPermissionAndSubscribe, permission } = usePushNotifications();
+  useNotificationSocket();
 
   useEffect(() => {
     if (permission === 'default') {

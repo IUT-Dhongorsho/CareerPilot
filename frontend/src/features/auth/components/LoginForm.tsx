@@ -4,7 +4,7 @@ import { Briefcase, Mail, Lock, LogIn } from 'lucide-react';
 import { useAuthStore } from '../store/authSlice';
 import { useCVStore } from '../../cv/store/cvSlice';
 import LottieCharacter from '../../../components/ui/LottieCharacter';
-import supabase from '../../../lib/supabase';
+import { signInWithOauth } from '../services/oauth';
 
 export default function LoginForm() {
   const [email, setEmail] = useState('');
@@ -38,15 +38,11 @@ export default function LoginForm() {
     }
   };
 
-  const signInWithOauth = async (selectedProvider: 'google' | 'github') => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: selectedProvider,
-      options: {
-        redirectTo: import.meta.env.VITE_APP_URL || 'http://localhost:3000',
-      },
-    });
-    if (error) {
-      setError(error.message);
+  const handleOAuthSignIn = async (selectedProvider: 'google' | 'github') => {
+    try {
+      await signInWithOauth(selectedProvider);
+    } catch (err: any) {
+      setError(err.message || 'OAuth sign in failed');
     }
   };
 
@@ -106,14 +102,14 @@ export default function LoginForm() {
             <div className="flex gap-4">
               <button 
                 type="button"
-                onClick={() => signInWithOauth('google')}
+                onClick={() => handleOAuthSignIn('google')}
                 className="flex-1 flex items-center justify-center gap-2 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
               >
                 Google
               </button>
               <button 
                 type="button"
-                onClick={() => signInWithOauth('github')}
+                onClick={() => handleOAuthSignIn('github')}
                 className="flex-1 flex items-center justify-center gap-2 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
               >
                 GitHub

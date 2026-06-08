@@ -1,8 +1,8 @@
 import webpush from 'web-push';
-import { db } from '../db';
-import { pushSubscriptions, notifications } from '../db/schema';
+import { db } from '../db/index.js';
+import { pushSubscriptions, notifications } from '../db/schema.js';
 import { eq } from 'drizzle-orm';
-import { getIO } from '../ws';
+import { getIO } from '../ws/index.js';
 import nodemailer from 'nodemailer';
 import * as dotenv from 'dotenv';
 

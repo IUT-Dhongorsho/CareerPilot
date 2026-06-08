@@ -20,7 +20,7 @@ const columnColors = {
   rejected: 'border-red-400',
 };
 
-export default function KanbanBoard() {
+export default function KanbanBoard({ showTitle = true }: { showTitle?: boolean }) {
   const { kanban, moveJob, reorderJobs } = useTrackerStore();
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -43,7 +43,9 @@ export default function KanbanBoard() {
 
     if (columnIds.includes(overId)) {
       if (sourceColumn && sourceColumn !== overId) {
-        moveJob(activeId, sourceColumn, overId);
+        // Find job title for notification
+        const job = kanban[sourceColumn as keyof typeof kanban].find(j => j.id === activeId);
+        moveJob(activeId, sourceColumn, overId, job?.title);
       }
     } else {
       if (sourceColumn) {
@@ -57,10 +59,10 @@ export default function KanbanBoard() {
   };
 
   return (
-    <div className="p-4">
-      <h2 className="text-2xl font-bold mb-6 text-gray-800">Job Application Tracker</h2>
+    <div className={`${showTitle ? 'p-4' : ''}`}>
+      {showTitle && <h2 className="text-2xl font-bold mb-6 text-gray-800">Job Application Tracker</h2>}
       <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        <div className="flex gap-4 overflow-x-auto pb-6">
+        <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
           {columnIds.map((col) => (
             <KanbanColumn
               key={col}

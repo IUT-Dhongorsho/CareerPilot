@@ -3,6 +3,7 @@ import App from './App';
 import LandingPage from './features/landing/components/LandingPage';
 import LoginForm from './features/auth/components/LoginForm';
 import SignupForm from './features/auth/components/SignupForm';
+import AuthCallback from './features/auth/components/AuthCallback';
 import CVUploader from './features/cv/components/CVUploader';
 import DashboardLayout from './features/dashboard/components/MainLayout';
 import KanbanBoard from './features/tracker/components/KanbanBoard';
@@ -25,6 +26,7 @@ export const router = createBrowserRouter([
       { index: true, element: <LandingPage /> },
       { path: 'login', element: <LoginForm /> },
       { path: 'signup', element: <SignupForm /> },
+      { path: 'auth/callback', element: <AuthCallback /> },
       {
         path: 'upload-cv',
         element: (
