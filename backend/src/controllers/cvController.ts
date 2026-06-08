@@ -48,7 +48,7 @@ export const handleUpload = async (req: Request, res: Response) => {
     const updateResult = await db.update(users).set({ hasUploadedCv: true }).where(eq(users.id, userId)).returning();
     console.log(`Update result for hasUploadedCv:`, updateResult);
 
-    res.json({ success: true, chunksCount: chunks.length });
+    res.json({ success: true, chunksCount: chunks.length, chunks });
   } catch (error) {
     console.error('CV processing error:', error);
     res.status(500).json({ error: `Failed to process CV: ${(error as Error).message}` });

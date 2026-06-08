@@ -10,7 +10,7 @@ export const getKanban = async (req: Request, res: Response) => {
 
   const { data, error } = await supabase.from('kanban_items').select('*').eq('user_id', userId);
   if (error) return res.status(500).json({ error: error.message });
-  const result = { applied: [], interviewing: [], offer: [], rejected: [] };
+  const result = { wishlist: [], applied: [], interviewing: [], offer: [], rejected: [] };
   data.forEach((item: any) => {
     ((result as any)[item.status]).push(item);
   });

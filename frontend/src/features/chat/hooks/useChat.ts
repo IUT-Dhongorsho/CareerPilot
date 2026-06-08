@@ -1,43 +1,51 @@
+import { useEffect } from 'react';
 import { useChatStore } from '../store/chatSlice';
-import { useCVStore } from '../../cv/store/cvSlice';
-import { sendMessage } from '../services';
-import { useJobsStore } from '../../jobs/store/jobsSlice';
+import { useChatSocket } from './useChatSocket';
+import axios from '../../../lib/api/axiosClient';
 
 export const useChat = () => {
-  const { addMessage, setLoading, messages } = useChatStore();
-  const { chunks } = useCVStore();
-  const { setResults } = useJobsStore();
+  const { messages, isLoading, currentSessionId, setSessionId, setLoading, addMessage } = useChatStore();
+  const { sendMessage: sendSocketMessage } = useChatSocket(currentSessionId);
+  // Unused setResults removed
+
+  useEffect(() => {
+    const initSession = async () => {
+      if (currentSessionId) return;
+      try {
+        const sessions = await axios.get<any[]>('/chat/sessions');
+        if (sessions && sessions.length > 0) {
+          setSessionId(sessions[0].id);
+        } else {
+          const newSession = await axios.post<any>('/chat/sessions', { title: 'Career Chat' });
+          if (newSession && newSession.id) {
+            setSessionId(newSession.id);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to init chat session:', error);
+      }
+    };
+    initSession();
+  }, [currentSessionId, setSessionId]);
 
   const sendUserMessage = async (text: string) => {
-    if (!text.trim()) return;
-
-    // Add user message
-    addMessage({ role: 'user', content: text });
-    setLoading(true);
-
-    try {
-      const response = await sendMessage(text, chunks);
-      
-      // If response contains job cards, update jobs store
-      if (response.type === 'job_cards' && response.jobs) {
-        setResults(response.jobs);
-      }
-      
-      // Add assistant message
-      addMessage({
-        role: 'assistant',
-        content: response.content,
-        jobResults: response.type === 'job_cards' ? response.jobs : undefined,
-      });
-    } catch (error) {
-      addMessage({
-        role: 'assistant',
-        content: 'Sorry, something went wrong. Please try again.',
-      });
-    } finally {
-      setLoading(false);
+    if (!text.trim() || !currentSessionId) return;
+    
+    // Check if the mock API is used, if so, fallback to manual adding for UI purposes
+    // but the actual socket will handle it. Wait, if mock is on, socket won't respond.
+    const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
+    if (USE_MOCK) {
+      addMessage({ role: 'user', content: text });
+      setLoading(true);
+      setTimeout(() => {
+        addMessage({ role: 'assistant', content: 'Mock response from unified hook.' });
+        setLoading(false);
+      }, 1000);
+      return;
     }
+
+    sendSocketMessage(text);
   };
 
-  return { messages, sendMessage: sendUserMessage, isLoading: useChatStore((s) => s.isLoading) };
+  return { messages, sendMessage: sendUserMessage, isLoading };
 };

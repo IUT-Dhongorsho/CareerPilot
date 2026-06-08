@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { supabase } from '../../../lib/supabaseClient';
+import supabase from '../../../lib/supabase';
 import axiosClient from '../../../lib/api/axiosClient';
 import type { AuthUser, AuthSession } from '../types';
 
@@ -54,13 +54,14 @@ export const useAuthStore = create<AuthState>()(
           const { data, error } = await supabase.auth.signInWithPassword({ email, password });
           if (error) throw new Error(error.message);
           // Sync user with backend
-          await axiosClient.post('/auth/sync', {
+          const syncResponse: any = await axiosClient.post('/auth/sync', {
             id: data.user.id,
             email: data.user.email,
             fullName: data.user.user_metadata?.full_name,
           });
           
           if (data.session) {
+            (data.session.user as any).hasUploadedCv = syncResponse?.payload?.hasUploadedCv || syncResponse?.hasUploadedCv || false;
             get().setAuth(data.session);
           }
         } catch (err: any) {
@@ -78,13 +79,14 @@ export const useAuthStore = create<AuthState>()(
           });
           if (error) throw new Error(error.message);
           // Sync with backend
-          await axiosClient.post('/auth/sync', {
+          const syncResponse: any = await axiosClient.post('/auth/sync', {
             id: data.user!.id,
             email: data.user!.email,
             fullName,
           });
           
           if (data.session) {
+            (data.session.user as any).hasUploadedCv = syncResponse?.payload?.hasUploadedCv || syncResponse?.hasUploadedCv || false;
             get().setAuth(data.session);
           }
         } catch (err: any) {

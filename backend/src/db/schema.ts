@@ -54,7 +54,7 @@ export const cvChunks = pgTable('cv_chunks', {
 
 // --- Tracker Tables ---
 
-export const kanbanStatusEnum = pgEnum('kanban_status', ['applied', 'interviewing', 'offer', 'rejected']);
+export const kanbanStatusEnum = pgEnum('kanban_status', ['wishlist', 'applied', 'interviewing', 'offer', 'rejected']);
 
 export const kanbanItems = pgTable('kanban_items', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -64,7 +64,7 @@ export const kanbanItems = pgTable('kanban_items', {
   company: text('company'),
   salary: text('salary'),
   deadline: date('deadline'),
-  status: text('status').$type<'applied' | 'interviewing' | 'offer' | 'rejected'>().notNull(),
+  status: text('status').$type<'wishlist' | 'applied' | 'interviewing' | 'offer' | 'rejected'>().notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 

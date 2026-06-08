@@ -1,45 +1,16 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useChatSocket } from '../hooks/useChatSocket';
-import { useChatStore } from '../store/chatSlice';
+import { useChat } from '../hooks/useChat';
 import MessageBubble from './MessageBubble';
 import JobList from '../../jobs/components/JobList';
 import { useJobsStore } from '../../jobs/store/jobsSlice';
 import { fadeInUp } from '../../../lib/animations';
-import axios from '../../../lib/api/axiosClient';
 
 export default function ChatInterface() {
   const [input, setInput] = useState('');
-  const { messages, isLoading, currentSessionId, setSessionId } = useChatStore();
-  const { sendMessage } = useChatSocket(currentSessionId);
+  const { messages, isLoading, sendMessage } = useChat();
   const { results: jobs } = useJobsStore();
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  // Initialize session
-  useEffect(() => {
-    const initSession = async () => {
-      if (currentSessionId) return;
-      
-      try {
-        // Try to get the latest session or create a new one
-        const sessions = await axios.get<any[]>('/chat/sessions');
-        
-        if (sessions && sessions.length > 0) {
-          setSessionId(sessions[0].id);
-          // History will be loaded by store or on-demand if needed
-        } else {
-          const newSession = await axios.post<any>('/chat/sessions', { title: 'Career Chat' });
-          if (newSession && newSession.id) {
-            setSessionId(newSession.id);
-          }
-        }
-      } catch (error) {
-        console.error('Failed to init chat session:', error);
-      }
-    };
-
-    initSession();
-  }, [currentSessionId, setSessionId]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -47,7 +18,7 @@ export default function ChatInterface() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || isLoading || !currentSessionId) return;
+    if (!input.trim() || isLoading) return;
     sendMessage(input);
     setInput('');
   };
