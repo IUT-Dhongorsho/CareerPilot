@@ -35,6 +35,6 @@ export async function similaritySearch(userId: string, queryEmbedding: number[],
     console.log(`  [Chunk ${i}] Similarity: ${r.similarity.toFixed(4)} | Text: ${r.chunkText.substring(0, 50)}...`);
   });
 
-  const filteredResults = results.filter(r => r.similarity > 0.5);
+  const filteredResults = results.filter(r => r.similarity > 0.3);
   return filteredResults.map((row) => row.chunkText);
 }

@@ -32,12 +32,13 @@ export const initSocket = (server: HttpServer) => {
         const { sessionId, content } = data;
         console.log(`[WS] Message from ${userId} in session ${sessionId}`);
 
-        const response = await ChatService.processMessage(userId, sessionId, content);
+        const { content: response, jobResults } = await ChatService.processMessage(userId, sessionId, content);
 
         socket.emit('chat:receive', {
           sessionId,
           role: 'assistant',
           content: response,
+          jobResults,
           createdAt: new Date().toISOString()
         });
       } catch (error) {

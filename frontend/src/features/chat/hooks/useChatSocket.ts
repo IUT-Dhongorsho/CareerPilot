@@ -2,6 +2,7 @@ import { useEffect, useRef, useCallback, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useAuthStore } from '../../auth/store/authSlice';
 import { useChatStore } from '../store/chatSlice';
+import { useJobsStore } from '../../jobs/store/jobsSlice';
 
 // Base URL for the backend, deriving the socket URL by stripping /api if present
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8005';
@@ -15,6 +16,7 @@ export const useChatSocket = (sessionId: string | null) => {
   const socketRef = useRef<Socket | null>(null);
   const { session } = useAuthStore();
   const { addMessage, setLoading } = useChatStore();
+  const { setResults } = useJobsStore();
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
@@ -40,7 +42,7 @@ export const useChatSocket = (sessionId: string | null) => {
     // Connection event handlers
 
     // Listen for incoming messages from the assistant
-    socket.on('chat:receive', (data: { sessionId: string; role: string; content: string; jobResults?: unknown[] }) => {
+    socket.on('chat:receive', (data: { sessionId: string; role: string; content: string; jobResults?: any[] }) => {
       // Ensure the message belongs to the current session
       if (data.sessionId === sessionId) {
         addMessage({
@@ -48,6 +50,11 @@ export const useChatSocket = (sessionId: string | null) => {
           content: data.content,
           jobResults: data.jobResults,
         });
+
+        if (data.jobResults && data.jobResults.length > 0) {
+          setResults(data.jobResults);
+        }
+
         setLoading(false);
       }
     });

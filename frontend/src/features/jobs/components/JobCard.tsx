@@ -46,12 +46,24 @@ export default function JobCard({ job, compact = false }: JobCardProps) {
         <span className="mx-2">•</span>
         <span>📅 Deadline: {job.deadline}</span>
       </div>
-      <button
-        onClick={() => addToKanban(job, 'applied')}
-        className="mt-3 text-sm bg-primary/10 text-primary px-3 py-1 rounded-md hover:bg-primary/20 transition"
-      >
-        + Add to Kanban
-      </button>
+      <div className="mt-3 flex gap-2">
+        <button
+          onClick={() => addToKanban(job, 'applied')}
+          className="text-sm bg-primary/10 text-primary px-3 py-1 rounded-md hover:bg-primary/20 transition"
+        >
+          + Add to Kanban
+        </button>
+        {job.link && (
+          <a
+            href={job.link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm bg-accent/10 text-accent px-3 py-1 rounded-md hover:bg-accent/20 transition flex items-center gap-1"
+          >
+            Go to Link ↗
+          </a>
+        )}
+      </div>
     </motion.div>
   );
 }

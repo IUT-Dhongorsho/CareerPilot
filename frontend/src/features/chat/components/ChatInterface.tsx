@@ -10,23 +10,21 @@ import axios from '../../../lib/api/axiosClient';
 
 export default function ChatInterface() {
   const [input, setInput] = useState('');
-  const { messages, isLoading, currentSessionId, setSessionId } = useChatStore();
+  const { messages, isLoading, currentSessionId, setSessionId, setMessages } = useChatStore();
   const { sendMessage } = useChatSocket(currentSessionId);
-  const { results: jobs } = useJobsStore();
+  const { results: jobs, setResults } = useJobsStore();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Initialize session
   useEffect(() => {
     const initSession = async () => {
       if (currentSessionId) return;
-      
+
       try {
-        // Try to get the latest session or create a new one
         const sessions = await axios.get<any[]>('/chat/sessions');
-        
+
         if (sessions && sessions.length > 0) {
           setSessionId(sessions[0].id);
-          // History will be loaded by store or on-demand if needed
         } else {
           const newSession = await axios.post<any>('/chat/sessions', { title: 'Career Chat' });
           if (newSession && newSession.id) {
@@ -40,6 +38,35 @@ export default function ChatInterface() {
 
     initSession();
   }, [currentSessionId, setSessionId]);
+
+  // Load history when session changes
+  useEffect(() => {
+    const loadHistory = async () => {
+      if (!currentSessionId) return;
+
+      try {
+        const history = await axios.get<any[]>(`/chat/sessions/${currentSessionId}/history`);
+        const formattedHistory = history.map((m: any) => ({
+          id: m.id,
+          role: m.role,
+          content: m.content,
+          timestamp: new Date(m.createdAt),
+          jobResults: m.metadata?.jobResults,
+        }));
+        setMessages(formattedHistory);
+
+        // Populate job results from the last assistant message if available
+        const lastAssistantMessage = [...formattedHistory].reverse().find(m => m.role === 'assistant' && m.jobResults);
+        if (lastAssistantMessage?.jobResults) {
+          setResults(lastAssistantMessage.jobResults);
+        }
+      } catch (error) {
+        console.error('Failed to load history:', error);
+      }
+    };
+
+    loadHistory();
+  }, [currentSessionId, setMessages, setResults]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });

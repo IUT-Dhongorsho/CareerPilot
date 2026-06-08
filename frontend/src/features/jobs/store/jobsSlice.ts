@@ -9,6 +9,7 @@ export interface Job {
   deadline: string;
   fitScore: number;
   description: string;
+  link?: string;
 }
 
 interface JobsState {
