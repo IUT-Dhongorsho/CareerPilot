@@ -6,6 +6,7 @@ interface ChatState {
   isLoading: boolean;
   currentSessionId: string | null;
   addMessage: (message: Omit<Message, 'id' | 'timestamp'>) => void;
+  setMessages: (messages: Message[]) => void;
   setLoading: (loading: boolean) => void;
   setSessionId: (id: string | null) => void;
   clearMessages: () => void;
@@ -26,6 +27,7 @@ export const useChatStore = create<ChatState>((set) => ({
         },
       ],
     })),
+  setMessages: (messages) => set({ messages }),
   setLoading: (loading) => set({ isLoading: loading }),
   setSessionId: (id) => set({ currentSessionId: id }),
   clearMessages: () => set({ messages: [] }),

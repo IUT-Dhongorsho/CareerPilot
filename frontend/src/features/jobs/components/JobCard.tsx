@@ -56,12 +56,30 @@ export default function JobCard({ job, compact = false }: JobCardProps) {
           <span className="flex items-center gap-2"><Calendar size={18} /> {job.deadline}</span>
         </div>
       </div>
-      <button
-        onClick={handleWishlist}
-        className="px-6 py-3 bg-indigo-600 text-white rounded-lg text-base hover:bg-indigo-700 transition flex items-center gap-2 whitespace-nowrap"
-      >
-        <Star size={18} /> Wishlist
-      </button>
+      <div className="mt-4 flex flex-wrap gap-2">
+        <button
+          onClick={handleWishlist}
+          className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-700 transition flex items-center gap-2 whitespace-nowrap"
+        >
+          <Star size={16} /> Wishlist
+        </button>
+        <button
+          onClick={() => addToKanban(job, 'applied')}
+          className="px-4 py-2 bg-primary/10 text-primary rounded-lg text-sm hover:bg-primary/20 transition flex items-center gap-2 whitespace-nowrap"
+        >
+          + Add to Kanban
+        </button>
+        {job.link && (
+          <a
+            href={job.link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-4 py-2 bg-accent/10 text-accent rounded-lg text-sm hover:bg-accent/20 transition flex items-center gap-2 whitespace-nowrap"
+          >
+            Go to Link ↗
+          </a>
+        )}
+      </div>
     </motion.div>
   );
 }

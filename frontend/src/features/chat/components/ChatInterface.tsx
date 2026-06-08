@@ -1,16 +1,73 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useChat } from '../hooks/useChat';
+import { useChatStore } from '../store/chatSlice';
+import { useChatSocket } from '../hooks/useChatSocket';
 import MessageBubble from './MessageBubble';
 import JobList from '../../jobs/components/JobList';
 import { useJobsStore } from '../../jobs/store/jobsSlice';
 import { fadeInUp } from '../../../lib/animations';
+import axiosClient from '../../../lib/api/axiosClient';
 
 export default function ChatInterface() {
   const [input, setInput] = useState('');
-  const { messages, isLoading, sendMessage } = useChat();
-  const { results: jobs } = useJobsStore();
+
+  const { messages, isLoading, currentSessionId, setSessionId, setMessages } = useChatStore();
+  const { sendMessage } = useChatSocket(currentSessionId);
+  const { results: jobs, setResults } = useJobsStore();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Initialize session
+  useEffect(() => {
+    const initSession = async () => {
+      if (currentSessionId) return;
+
+      try {
+        const sessions = await axiosClient.get<any[]>('/chat/sessions');
+
+        if (sessions && sessions.length > 0) {
+          setSessionId(sessions[0].id);
+        } else {
+          const newSession = await axiosClient.post<any>('/chat/sessions', { title: 'Career Chat' });
+          if (newSession && newSession.id) {
+            setSessionId(newSession.id);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to init chat session:', error);
+      }
+    };
+
+    initSession();
+  }, [currentSessionId, setSessionId]);
+
+  // Load history when session changes
+  useEffect(() => {
+    const loadHistory = async () => {
+      if (!currentSessionId) return;
+
+      try {
+        const history = await axiosClient.get<any[]>(`/chat/sessions/${currentSessionId}/history`);
+        const formattedHistory = history.map((m: any) => ({
+          id: m.id,
+          role: m.role,
+          content: m.content,
+          timestamp: new Date(m.createdAt),
+          jobResults: m.metadata?.jobResults,
+        }));
+        setMessages(formattedHistory);
+
+        // Populate job results from the last assistant message if available
+        const lastAssistantMessage = [...formattedHistory].reverse().find(m => m.role === 'assistant' && m.jobResults);
+        if (lastAssistantMessage?.jobResults) {
+          setResults(lastAssistantMessage.jobResults);
+        }
+      } catch (error) {
+        console.error('Failed to load history:', error);
+      }
+    };
+
+    loadHistory();
+  }, [currentSessionId, setMessages, setResults]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
