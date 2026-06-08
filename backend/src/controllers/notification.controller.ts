@@ -1,11 +1,11 @@
 import { Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
 import { db } from '../db';
-import { notifications } from '../db/schema';
+import { notifications } from '../db/schema.js';
 import { eq, desc, and } from 'drizzle-orm';
-import { sendSuccess } from '../utils/apiResponse';
-import { AuthRequest } from '../middleware/auth.middleware';
-import { NotificationService } from '../services/notification.service';
+import { sendSuccess } from '../utils/apiResponse.js';
+import { AuthRequest } from '../middleware/auth.middleware.js';
+import { NotificationService } from '../services/notification.service.js';
 
 export class NotificationController {
   static getNotifications = asyncHandler(async (req: AuthRequest, res: Response) => {

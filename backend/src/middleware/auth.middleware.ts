@@ -1,9 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
-import { db } from '../db';
-import { users } from '../db/schema';
+import { db } from '../db/index.js';
+import { users } from '../db/schema.js';
 import { eq } from 'drizzle-orm';
-import { sendError } from '../utils/apiResponse';
-import { supabase } from '../utils/supabase-client';
+import { sendError } from '../utils/apiResponse.js';
+import { supabase } from '../utils/supabase-client.js';
 
 export interface AuthRequest extends Request {
   user?: any;
@@ -17,7 +17,7 @@ export const authMiddleware = async (req: AuthRequest, res: Response, next: Next
     }
 
     const token = authHeader.split(' ')[1];
-    
+
     // Verify token using Supabase Auth
     const { data: { user: authUser }, error } = await supabase.auth.getUser(token);
 

@@ -1,6 +1,6 @@
 import { Server, Socket } from 'socket.io';
 import { Server as HttpServer } from 'http';
-import { redis } from '../config/redis';
+import { redis } from '../config/redis.js';
 import { socketAuthMiddleware } from './socket.middleware.js';
 import * as ChatService from '../services/chat/chat.service.js';
 

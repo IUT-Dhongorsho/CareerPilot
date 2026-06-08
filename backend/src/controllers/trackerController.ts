@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { supabase } from '../utils/supabase-client.js';
+import { NotificationService } from '../services/notification.service.js';
 
 const getUserId = (req: Request) => (req as any).user?.id;
 
@@ -33,6 +34,14 @@ export const addToKanban = async (req: Request, res: Response) => {
     status,
   });
   if (error) return res.status(500).json({ error: error.message });
+
+  // Trigger Notification
+  await NotificationService.sendNotification(
+    userId,
+    'kanban_added',
+    `Added "${job.title}" at ${job.company} to your ${status} list.`
+  );
+
   res.json({ success: true });
 };
 
@@ -40,10 +49,18 @@ export const moveJob = async (req: Request, res: Response) => {
   const userId = getUserId(req);
   if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
-  const { jobId, toStatus } = req.body;
+  const { jobId, toStatus, jobTitle } = req.body;
   if (!jobId || !toStatus) return res.status(400).json({ error: 'Missing jobId or toStatus' });
   const { error } = await supabase.from('kanban_items').update({ status: toStatus }).eq('id', jobId).eq('user_id', userId);
   if (error) return res.status(500).json({ error: error.message });
+
+  // Trigger Notification
+  await NotificationService.sendNotification(
+    userId,
+    'kanban_moved',
+    `Moved "${jobTitle || 'Job'}" to ${toStatus}.`
+  );
+
   res.json({ success: true });
 };
 
@@ -69,6 +86,14 @@ export const addTodo = async (req: Request, res: Response) => {
   if (!text) return res.status(400).json({ error: 'Missing text' });
   const { data, error } = await supabase.from('todos').insert({ user_id: userId, text, due_date: dueDate }).select();
   if (error) return res.status(500).json({ error: error.message });
+
+  // Trigger Notification
+  await NotificationService.sendNotification(
+    userId,
+    'todo_added',
+    `New task created: "${text}".`
+  );
+
   res.json({ id: data[0].id });
 };
 
@@ -77,9 +102,19 @@ export const toggleTodo = async (req: Request, res: Response) => {
   if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
   const { id } = req.params;
-  const { completed } = req.body;
+  const { completed, text } = req.body;
   const { error } = await supabase.from('todos').update({ completed }).eq('id', id).eq('user_id', userId);
   if (error) return res.status(500).json({ error: error.message });
+
+  // Trigger Notification
+  if (completed) {
+    await NotificationService.sendNotification(
+      userId,
+      'todo_completed',
+      `Task completed: "${text || 'Task'}".`
+    );
+  }
+
   res.json({ success: true });
 };
 

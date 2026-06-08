@@ -1,5 +1,5 @@
-import { db } from '../db';
-import { users } from '../db/schema';
+import { db } from '../db/index.js';
+import { users } from '../db/schema.js';
 
 export class AuthService {
   static async syncUser(data: { id: string; email: string; fullName?: string; avatarUrl?: string }) {
