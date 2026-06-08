@@ -1,11 +1,13 @@
 import { create } from 'zustand';
+
 import { persist } from 'zustand/middleware';
+import type { AuthUser, AuthSession } from '../types';
 
 interface AuthState {
-  user: { id: string; email: string } | null;
+  user: AuthUser | null;
+  session: AuthSession | null;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  signup: (email: string, password: string) => Promise<void>;
+  setAuth: (session: AuthSession | null) => void;
   logout: () => void;
 }
 
@@ -13,23 +15,31 @@ export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
       user: null,
+      session: null,
       isLoading: false,
-      login: async (email, password) => {
-        set({ isLoading: true });
-        await new Promise(resolve => setTimeout(resolve, 500));
-        if (email && password) {
-          set({ user: { id: 'mock-user-1', email }, isLoading: false });
+      setAuth: (session) => {
+        if (session) {
+          const simplifiedUser: AuthUser = {
+            email: session.user.email || '',
+            name: (session.user as any).user_metadata?.full_name || (session.user as any).name,
+            avatar_url: (session.user as any).user_metadata?.avatar_url || (session.user as any).avatar_url,
+          };
+          
+          const simplifiedSession: AuthSession = {
+            access_token: session.access_token,
+            refresh_token: session.refresh_token,
+            expires_at: session.expires_at || 0,
+            expires_in: session.expires_in,
+            token_type: session.token_type,
+            user: simplifiedUser,
+          };
+
+          set({ session: simplifiedSession, user: simplifiedUser, isLoading: false });
         } else {
-          set({ isLoading: false });
-          throw new Error('Invalid credentials');
+          set({ session: null, user: null, isLoading: false });
         }
       },
-      signup: async (email, password) => {
-        set({ isLoading: true });
-        await new Promise(resolve => setTimeout(resolve, 500));
-        set({ user: { id: 'mock-user-1', email }, isLoading: false });
-      },
-      logout: () => set({ user: null }),
+      logout: () => set({ session: null, user: null }),
     }),
     { name: 'auth-storage' }
   )

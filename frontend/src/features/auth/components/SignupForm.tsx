@@ -3,13 +3,14 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '../store/authSlice';
 import { signup } from '../services';
 import supabase from '../../../lib/supabase';
+import apiClient from '../../../lib/api/axiosClient';
 
 export default function SignupForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
-  const { signup: signupAction, isLoading } = useAuthStore();
+  const { isLoading } = useAuthStore();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -30,6 +31,15 @@ export default function SignupForm() {
       if (!user) {
         throw new Error('No user data returned from Supabase');
       }
+      
+      // Sync user with shadow database
+      await apiClient.post('/auth/sync', {
+        email: user.email,
+        id: user.id,
+        fullName: user.user_metadata?.full_name,
+        avatarUrl: user.user_metadata?.avatar_url,
+      });
+
       navigate('/upload-cv');
     } catch (err: any) {
       setError(err.message || 'Signup failed');

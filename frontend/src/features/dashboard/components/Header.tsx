@@ -1,14 +1,14 @@
-import { useAuthStore } from '../../auth/store/authSlice';
+import { useAuth } from '../../auth/hooks/useAuth';
 import { useCVStore } from '../../cv/store/cvSlice';
 import { useNavigate } from 'react-router-dom';
 
 export default function Header() {
-  const { user, logout } = useAuthStore();
+  const { user, logout } = useAuth();
   const { resetCV } = useCVStore();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     resetCV();
     navigate('/login');
   };
