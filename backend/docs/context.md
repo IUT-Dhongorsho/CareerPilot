@@ -1,522 +1,97 @@
-# CareerPilot Backend – Implementation Context (Final)
+# CareerPilot Backend – Project Context & Architecture
 
 ## Overview
+CareerPilot is an AI-powered career assistant that helps users optimize their CVs, find matching jobs, and track their applications. This document provides a comprehensive overview of the backend services, architecture, and workflows to ensure seamless onboarding for AI and human developers.
 
-This document describes the **backend services** built for CareerPilot, focusing on:
-
-- RAG (Retrieval-Augmented Generation) pipeline
-- Job search with cosine similarity fit score
-- Tracker (Kanban, Todos, Calendar)
-- Profile extraction and CV analysis
-- Mock interview system with Redis sessions
-- Rate limiting and security
-
-All services are built with **Express + TypeScript**, **Supabase (PostgreSQL + pgvector)**, **Groq (Llama 3)**, **Transformers.js** (local embeddings), **Redis** (session store), and **express-rate-limit**.
-
----
-
-# 1. RAG Pipeline (CV Upload → Chunks → Embeddings → Storage)
-
-## File Locations
-
-### Routes
-- `src/routes/cvRoutes.ts`
-
-### Controller
-- `src/controllers/cvController.ts`
-
-### Services (`src/services/rag/`)
-- `chunker.ts` – recursive text splitting (size 500, overlap 50)
-- `embeddings.ts` – local embedding via Transformers.js (`Xenova/all-MiniLM-L6-v2`)
-- `vectorStore.ts` – insert & similarity search in Supabase pgvector
-- `retriever.ts` – public function `getUserCVChunks(userId, query, topK)`
-
-### Utils
-- `src/utils/pdfParser.ts` (`pdfjs-dist`)
-- `src/utils/docxParser.ts` (`mammoth`)
-
-## Flow
-
-1. `POST /api/cv/upload` (`multipart/form-data`, field `cv`)
-2. `authMiddleware` attaches `req.user.id` (JWT).
-3. `cvController.handleUpload`
-   - Parses file (PDF/DOCX/TXT) to plain text.
-   - `recursiveChunk(text)` → array of chunks.
-   - For each chunk:
-     - `getEmbedding(chunk)` (local model, no external API).
-     - `insertChunk(userId, chunkText, embedding)` → stores in Supabase table `cv_chunks`.
-4. Returns:
-
-```json
-{
-  "success": true,
-  "chunksCount": "N"
-}
-```
-
-## Database Table (Supabase + pgvector)
-
-```sql
-CREATE EXTENSION IF NOT EXISTS vector;
-
-CREATE TABLE cv_chunks (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL,
-  chunk_text TEXT NOT NULL,
-  embedding VECTOR(384),
-  metadata JSONB,
-  created_at TIMESTAMP DEFAULT NOW()
-);
-```
-
-## Retrieval Function (Exported for Other Services)
-
-```ts
-export async function getUserCVChunks(
-  userId: string,
-  query: string,
-  topK = 5
-): Promise<string[]>
-```
-
-### Behavior
-
-- Embeds query using the same local model.
-- Calls Supabase RPC `match_cv_chunks` (cosine similarity, threshold `0.7`).
-- Returns top-K `chunk_text` entries.
-
----
-
-# 2. Job Search + Cosine Similarity Fit Score
-
-## File Locations
-
-### Routes
-- `src/routes/jobsRoutes.ts`
-
-### Controller
-- `src/controllers/jobsController.ts`
-
-### Services
-- `src/services/jobSearch/serpapiClient.ts`
-
-### Utils
-- `src/utils/fitScoreCalculator.ts`
-- `src/utils/cosineSimilarity.ts`
-
-## Flow
-
-### Endpoint
-
-```http
-GET /api/jobs/search?q=<query>&location=<city>
-```
-
-(Auth required)
-
-### Process
-
-`jobsController.searchJobs`
-
-1. Calls:
-
-```ts
-searchJobsOnSerpapi(query, location)
-```
-
-2. Retrieves jobs from SerpAPI Google Jobs.
-3. For each job:
-   - Calls:
-
-```ts
-computeFitScore(userId, jobDescription)
-```
-
-4. Retrieves CV chunks:
-
-```ts
-getUserCVChunks(userId, jobDescription, 5)
-```
-
-5. Embeds:
-   - CV text
-   - Job description
-
-6. Computes cosine similarity.
-
-7. Calculates:
-
-```ts
-Score = Math.round(similarity * 100);
-```
-
-8. Extracts:
-   - Matching skills
-   - Missing skills
-
-9. Returns:
-
-```json
-{
-  "jobs": []
-}
-```
-
-## Cosine Similarity Implementation
-
-```ts
-export function cosineSimilarity(a: number[], b: number[]): number {
-  let dot = 0,
-    magA = 0,
-    magB = 0;
-
-  for (let i = 0; i < a.length; i++) {
-    dot += a[i] * b[i];
-    magA += a[i] * a[i];
-    magB += b[i] * b[i];
-  }
-
-  return dot / (Math.sqrt(magA) * Math.sqrt(magB));
-}
-```
-
----
-
-# 3. Tracker CRUD (Kanban, Todos, Calendar)
-
-## File Locations
-
-### Routes
-- `src/routes/trackerRoutes.ts`
-
-### Controller
-- `src/controllers/trackerController.ts`
-
-### Database Tables
-- `kanban_items`
-- `todos`
-
-> No separate calendar table. Calendar events are derived.
-
-## Endpoints (All Require Authentication)
-
-| Method | Endpoint | Description |
-|----------|----------|----------|
-| GET | `/api/tracker/kanban` | Returns `{ applied, interviewing, offer, rejected }` |
-| POST | `/api/tracker/kanban` | Body: `{ job, status }` → add job |
-| PUT | `/api/tracker/kanban/move` | Body: `{ jobId, toStatus }` → move job |
-| GET | `/api/tracker/todos` | Returns `{ todos: [...] }` |
-| POST | `/api/tracker/todos` | Body: `{ text, dueDate }` → create todo |
-| PUT | `/api/tracker/todos/:id` | Body: `{ completed }` → toggle todo |
-| GET | `/api/tracker/calendar` | Returns events from deadlines and due dates |
-
-### Persistence
-
-All data is stored in Supabase.
-
-No in-memory storage is used.
-
----
-
-# 4. Profile Extraction & CV Analysis
-
-## File Locations
-
-### Routes
-- `src/routes/profileRoutes.ts`
-
-### Controller
-- `src/controllers/profileController.ts`
-
-### Dependencies
-- `getUserCVChunks`
-- Groq LLM
-
-## Endpoints
-
-### POST `/api/cv/profile`
-
-#### Purpose
-
-Extract structured profile information:
-
-- Name
-- Email
-- Phone
-- Education
-- Experience
-- Skills
-- Certifications
-
-#### Flow
-
-1. Calls:
-
-```ts
-getUserCVChunks(
-  userId,
-  "name email phone education experience skills certifications",
-  15
-)
-```
-
-2. Sends chunks to Groq with JSON extraction prompt.
-3. Returns:
-
-```json
-{
-  "success": true,
-  "profile": {}
-}
-```
-
----
-
-### POST `/api/cv/analyze`
-
-#### Purpose
-
-Generate ATS score and resume feedback.
-
-#### Flow
-
-1. Calls:
-
-```ts
-getUserCVChunks(
-  userId,
-  "resume feedback structure skills improvements",
-  20
-)
-```
-
-2. Sends chunks to Groq with structured feedback prompt.
-3. Returns:
-
-```json
-{
-  "success": true,
-  "feedback": {}
-}
-```
-
-### Environment Requirement
-
-```env
-GROQ_API_KEY=your_api_key
-```
-
----
-
-# 5. Mock Interview System with Redis Sessions
-
-## File Locations
-
-### Routes
-- `src/routes/interviewRoutes.ts`
-
-### Controller
-- `src/controllers/interviewController.ts`
-
-### Session Service
-- `src/services/interview/sessions.ts`
-
-### Config
-- `src/config/redis.ts`
-
-## Session Storage – Redis
-
-### Why Redis?
-
-- Persistent
-- Shared across instances
-- Auto-expiry
-- Production-ready
-
-### Configuration
-
-- TTL: `3600` seconds (1 hour)
-- Key pattern:
-
-```text
-interview:<sessionId>
-```
-
-- Value: JSON session state
-
-### Operations
-
-- `createSession`
-- `getSession`
-- `updateSession`
-- `deleteSession`
-
-## Endpoints
-
-### POST `/api/interview/start`
-
-#### Request Body
-
-```json
-{
-  "jobTitle": "",
-  "jobDescription": ""
-}
-```
-
-#### Flow
-
-1. Retrieves relevant CV chunks.
-2. Groq generates first question.
-3. Creates Redis session.
-4. Stores initial state.
-5. Returns:
-
-```json
-{
-  "sessionId": "",
-  "question": "",
-  "questionNumber": 1
-}
-```
-
----
-
-### POST `/api/interview/answer`
-
-#### Request Body
-
-```json
-{
-  "sessionId": "",
-  "answer": ""
-}
-```
-
-#### Flow
-
-1. Validates session ownership.
-2. Stores answer.
-3. If fewer than 5 questions asked:
-   - Groq generates feedback.
-   - Groq generates next question.
-   - Updates Redis session.
-4. If interview is complete:
-   - Groq generates final evaluation.
-
-#### Returns
-
-```json
-{
-  "feedback": "",
-  "nextQuestion": "",
-  "isComplete": false,
-  "questionNumber": 2
-}
-```
-
----
-
-### GET `/api/interview/state/:sessionId`
-
-Returns current interview state:
-
-- Questions
-- Answers
-- Current index
-
-### Persistence
-
-No database persistence.
-
-Redis ephemeral storage is sufficient for the hackathon.
-
----
-
-# 6. Authentication & Security
-
-## Authentication
-
-### Middleware
-
-```text
-src/middleware/authMiddleware.ts
-```
-
-(Implemented by teammate)
-
-### Responsibilities
-
-- Verifies JWT from:
-
-```http
-Authorization: Bearer <token>
-```
-
-- Attaches:
-
-```ts
-req.user.id
-```
-
-to the request object.
-
----
-
-## Rate Limiting
-
-### Package
-
-```text
-express-rate-limit
-```
-
-### Configuration
-
-Applied globally to:
-
-```text
-/api/*
-```
-
-Limit:
-
-```text
-100 requests per minute per IP
-```
-
-Purpose:
-
-- Prevent abuse
-- Reduce spam
-- Protect API resources
-
----
-
-## HTTPS
-
-Not implemented locally.
-
-Deployment platforms such as:
-
-- Render
-- Vercel
-
-provide HTTPS automatically.
-
----
-
-# Technology Stack Summary
-
+### Tech Stack
 | Layer | Technology |
-|---------|------------|
-| Backend | Express + TypeScript |
-| Database | Supabase PostgreSQL |
-| Vector Search | pgvector |
-| Embeddings | Transformers.js (`Xenova/all-MiniLM-L6-v2`) |
-| LLM | Groq (Llama 3) |
-| Cache / Sessions | Redis |
-| Auth | JWT |
-| Rate Limiting | express-rate-limit |
-| File Parsing | pdfjs-dist, mammoth |
-| Job Aggregation | SerpAPI Google Jobs |
+| :--- | :--- |
+| **Runtime** | Node.js (Express 5 + TypeScript) |
+| **Database** | PostgreSQL (Supabase) |
+| **ORM** | Drizzle ORM |
+| **Vector Search** | pgvector (384 dimensions) |
+| **Embeddings** | Transformers.js (Local: `Xenova/all-MiniLM-L6-v2`) |
+| **LLM** | Groq (Llama 3.1 / Llama 3) |
+| **Cache/Sessions** | Redis |
+| **Auth** | Supabase Auth (JWT with JWKS verification) |
+| **Parsing** | pdfjs-dist, mammoth |
+
+---
+
+## 1. Core Architecture & Workflow
+
+### User Synchronization (Shadow DB)
+To maintain referential integrity and performance, we sync Supabase users into a local `users` table.
+- **Endpoint**: `POST /api/auth/sync`
+- **Workflow**: Frontend calls this after login/signup. Backend creates or updates the user record in PostgreSQL.
+- **Middleware**: `authMiddleware` verifies the JWT via `utils/jwt.ts` (JWKS) and ensures the user exists in the local `users` table.
+
+### RAG Pipeline (CV Intelligence)
+1. **Upload**: `POST /api/cv/upload` parses PDF/DOCX into text.
+2. **Chunking**: Text is split into overlapping chunks (size 500, overlap 50).
+3. **Embedding**: Each chunk is embedded locally using Transformers.js.
+4. **Storage**: Chunks and vectors are stored in the `cv_chunks` table using Drizzle + `pgvector`.
+5. **Retrieval**: `getUserCVChunks` uses `cosineDistance` to fetch the most relevant parts of the CV for AI prompts.
+
+---
+
+## 2. API Endpoints
+
+### 🔐 Authentication & Sync
+- `POST /api/auth/sync`: Hydrate shadow `users` table with Supabase UID and metadata.
+
+### 📄 CV & AI Analysis
+- `POST /api/cv/upload`: Upload and process CV (PDF/DOCX).
+- `POST /api/cv/profile`: Extract professional profile (JSON) using Groq.
+- `POST /api/cv/analyze`: Generate ATS score and structured feedback.
+
+### 💼 Job Discovery
+- `GET /api/jobs/search?q=&location=`: Search via SerpApi with personalized **Fit Score** (Cosine Similarity between CV chunks and job description).
+
+### 📋 Application Tracker (Kanban & Tasks)
+- `GET /api/tracker/kanban`: Fetch applications by status.
+- `POST /api/tracker/kanban`: Add job to tracker.
+- `PUT /api/tracker/kanban/move`: Update application status.
+- `GET /api/tracker/todos`: Fetch user tasks.
+- `POST /api/tracker/todos`: Create task.
+- `GET /api/tracker/calendar`: Unified view of deadlines and tasks.
+
+### 🎙️ AI Interview
+- `POST /api/interview/start`: Initialize Redis-backed interview session.
+- `POST /api/interview/answer`: Submit answer, get feedback, and next question.
+
+### 🔔 Notifications
+- `GET /api/notifications`: Retrieve user alerts.
+- `PATCH /api/notifications/:id/read`: Mark as read.
+
+---
+
+## 3. Database Schema (Drizzle)
+Key tables defined in `src/db/schema.ts`:
+- `users`: Core user profile (Primary Key is Supabase UID).
+- `cv_chunks`: RAG data with `vector(384)` embeddings.
+- `kanban_items`: Application tracking data.
+- `todos`: User tasks.
+- `notifications`: Real-time system alerts.
+- `chat_sessions` & `messages`: AI chat history.
+
+---
+
+## 4. Operational Notes & Plans
+
+### Current Implementation Status
+- [x] JWT verification with JWKS support.
+- [x] User sync between Supabase and shadow DB.
+- [x] RAG pipeline using Drizzle and local embeddings.
+- [x] Similarity search using Drizzle vector operators.
+
+### Critical AI Instructions
+- **Models**: Use `llama-3.1-70b-versatile` or `llama3-8b-8192` on Groq (Avoid decommissioned `llama3-70b-8192`).
+- **DB Access**: Always use `db` (Drizzle) for queries. Avoid direct `supabase` client calls for database operations.
+- **Auth**: Always protect routes with `authMiddleware` unless specified.
+- **Modularity**: Keep JWT logic in `utils/jwt.ts` and API response logic in `utils/apiResponse.ts`.
+
+### Planned Fixes
+1. Update `profileController.ts` and `interviewController.ts` to use active Groq models.
+2. Refactor remaining Supabase client calls in `trackerController.ts` to use Drizzle.
+3. Implement WebSocket events for real-time notifications in `notification.service.ts`.
