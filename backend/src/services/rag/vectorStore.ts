@@ -11,6 +11,11 @@ export async function insertChunk(userId: string, chunkText: string, embedding: 
   });
 }
 
+export async function clearUserChunks(userId: string) {
+  console.log(`Clearing existing chunks for user ${userId}`);
+  await db.delete(cvChunks).where(eq(cvChunks.userId, userId));
+}
+
 export async function similaritySearch(userId: string, queryEmbedding: number[], topK: number = 5) {
   // Similarity = 1 - Cosine Distance
   const similarity = sql<number>`1 - (${cosineDistance(cvChunks.embedding, queryEmbedding)})`;

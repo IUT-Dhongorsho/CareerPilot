@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '../store/authSlice';
-import { signup } from '../services';
 import supabase from '../../../lib/supabase';
 import apiClient from '../../../lib/api/axiosClient';
 
 export default function SignupForm() {
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -21,26 +21,38 @@ export default function SignupForm() {
       return;
     }
     try {
-      // await signupAction(email, password);
-      const supa_response = await supabase.auth.signUp({ email, password });
-      console.log(supa_response);
+      const supa_response = await supabase.auth.signUp({ 
+        email, 
+        password,
+        options: {
+          data: {
+            full_name: name,
+          }
+        }
+      });
+      
       if (supa_response.error) {
         throw new Error(supa_response.error.message);
       }
+      
       const user = supa_response.data.user;
       if (!user) {
         throw new Error('No user data returned from Supabase');
       }
       
       // Sync user with shadow database
-      await apiClient.post('/auth/sync', {
+      const backend_response: any = await apiClient.post('/auth/sync', {
         email: user.email,
         id: user.id,
-        fullName: user.user_metadata?.full_name,
+        fullName: name, // Use local name state as metadata might not be immediate
         avatarUrl: user.user_metadata?.avatar_url,
       });
 
-      navigate('/upload-cv');
+      if (backend_response.payload?.hasUploadedCv) {
+        navigate('/dashboard');
+      } else {
+        navigate('/upload-cv');
+      }
     } catch (err: any) {
       setError(err.message || 'Signup failed');
     }
@@ -52,12 +64,24 @@ export default function SignupForm() {
         <h1 className="text-2xl font-bold text-center mb-6">Create Account</h1>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
+            <label className="block text-sm font-medium mb-1">Full Name</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full p-2 border border-border rounded-md"
+              placeholder="John Doe"
+              required
+            />
+          </div>
+          <div>
             <label className="block text-sm font-medium mb-1">Email</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full p-2 border border-border rounded-md"
+              placeholder="john@example.com"
               required
             />
           </div>

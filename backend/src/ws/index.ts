@@ -1,6 +1,7 @@
 import { Server, Socket } from 'socket.io';
 import { Server as HttpServer } from 'http';
 import { socketAuthMiddleware } from './socket.middleware';
+import { redis } from '../config/redis';
 
 let io: Server;
 
@@ -14,15 +15,20 @@ export const initSocket = (server: HttpServer) => {
 
   io.use(socketAuthMiddleware);
 
-  io.on('connection', (socket: Socket) => {
+  io.on('connection', async (socket: Socket) => {
     const userId = (socket as any).user.id;
     console.log(`User connected: ${userId} (${socket.id})`);
+
+    // Set online status in Redis
+    await redis.set(`user:${userId}:status`, 'online');
 
     // Join a private room for targeted notifications
     socket.join(userId);
 
-    socket.on('disconnect', () => {
+    socket.on('disconnect', async () => {
       console.log(`User disconnected: ${socket.id}`);
+      // Remove online status or set to offline
+      await redis.del(`user:${userId}:status`);
     });
   });
 

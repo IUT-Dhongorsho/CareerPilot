@@ -2,6 +2,7 @@ export type AuthUser = {
   name?: string;
   email: string;
   avatar_url?: string;
+  hasUploadedCv?: boolean;
 };
 
 export type AuthSession = {

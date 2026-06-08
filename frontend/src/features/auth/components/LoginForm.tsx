@@ -27,14 +27,18 @@ export default function LoginForm() {
       }
       //Use authstore to store session and user
       // apiClient call to backend to sync user with shadow database.
-      const backend_response = await apiClient.post('/auth/sync', {
+      const backend_response: any = await apiClient.post('/auth/sync', {
         email: user.email,
         id: user.id,
         fullName: user.user_metadata?.full_name,
         avatarUrl: user.user_metadata?.avatar_url,
       });
-      console.log(backend_response);
-      navigate('/upload-cv');
+      
+      if (backend_response.payload?.hasUploadedCv) {
+        navigate('/dashboard');
+      } else {
+        navigate('/upload-cv');
+      }
     } catch (err: any) {
       setError(err.message || 'Login failed');
     }

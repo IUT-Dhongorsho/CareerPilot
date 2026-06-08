@@ -15,6 +15,8 @@ webpush.setVapidDetails(
   process.env.VAPID_PRIVATE_KEY!
 );
 
+import { redis } from '../config/redis';
+
 export class NotificationService {
   private static transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
@@ -26,31 +28,46 @@ export class NotificationService {
   });
 
   /**
-   * Orchestrates the entire notification flow: DB -> Socket -> Push -> Email (Optional)
+   * Orchestrates the entire notification flow with intelligent hybrid delivery:
+   * 1. Persists to Database (always)
+   * 2. Checks Redis for online status
+   * 3. Sends via Socket if online
+   * 4. Sends via Web Push if offline
+   * 5. Sends via Email if requested
    */
   static async sendNotification(userId: string, type: string, message: string, options?: { email?: boolean, emailPayload?: { subject: string, html?: string } }) {
-    // 1. Persist to Database
+    // 1. Persist to Database (Source of Truth)
     const [notification] = await db.insert(notifications).values({
       userId,
       type,
       message,
     }).returning();
 
-    // 2. Real-time Delivery (Socket.io)
-    try {
-      const io = getIO();
-      io.to(userId).emit('notification:new', notification);
-    } catch (err) {
-      console.warn(`Socket notification skipped for user ${userId}: Server not ready.`);
+    // 2. Check Presence in Redis
+    const status = await redis.get(`user:${userId}:status`);
+    const isOnline = status === 'online';
+
+    if (isOnline) {
+      // 3. Real-time Delivery (Socket.io)
+      try {
+        const io = getIO();
+        io.to(userId).emit('notification:new', notification);
+        console.log(`Notification delivered via Socket to user: ${userId}`);
+      } catch (err) {
+        console.warn(`Socket delivery failed for user ${userId}, falling back to push.`);
+        await this.triggerPush(userId, { title: 'CareerPilot Update', body: message });
+      }
+    } else {
+      // 4. Offline Fallback (Web Push)
+      console.log(`User ${userId} is offline. Sending via Web Push.`);
+      await this.triggerPush(userId, { title: 'CareerPilot Update', body: message });
     }
 
-    // 3. Web Push Delivery (VAPID)
-    await this.triggerPush(userId, { title: 'CareerPilot Update', body: message });
-
-    // 4. Email Delivery (Optional)
+    // 5. Email Delivery (Optional)
     if (options?.email && options.emailPayload) {
-      // We assume user email is fetched or passed. For now, fetch from local users table.
-      const user = await db.query.users.findFirst({ where: eq(notifications.userId, userId) });
+      const user = await db.query.users.findFirst({
+        where: (users, { eq }) => eq(users.id, userId)
+      });
       if (user?.email) {
         await this.sendEmail(user.email, options.emailPayload.subject, message, options.emailPayload.html);
       }

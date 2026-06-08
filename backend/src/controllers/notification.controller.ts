@@ -5,6 +5,7 @@ import { notifications } from '../db/schema';
 import { eq, desc, and } from 'drizzle-orm';
 import { sendSuccess } from '../utils/apiResponse';
 import { AuthRequest } from '../middleware/auth.middleware';
+import { NotificationService } from '../services/notification.service';
 
 export class NotificationController {
   static getNotifications = asyncHandler(async (req: AuthRequest, res: Response) => {
@@ -40,5 +41,18 @@ export class NotificationController {
       .where(eq(notifications.userId, userId));
 
     sendSuccess(res, null, 'All notifications marked as read');
+  });
+
+  static subscribe = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const userId = req.user.id;
+    const { subscription } = req.body;
+
+    if (!subscription) {
+      res.status(400);
+      throw new Error('Missing subscription object');
+    }
+
+    await NotificationService.saveSubscription(userId, subscription);
+    sendSuccess(res, null, 'Push subscription saved successfully');
   });
 }

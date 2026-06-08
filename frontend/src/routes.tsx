@@ -18,8 +18,8 @@ export const router = createBrowserRouter([
     element: <App />,
     children: [
       { index: true, element: <LandingPage /> },
-      { path: 'login', element: <LoginForm /> },
-      { path: 'signup', element: <SignupForm /> },
+      { path: 'login', element: <ProtectedRoute><LoginForm /></ProtectedRoute> },
+      { path: 'signup', element: <ProtectedRoute><SignupForm /></ProtectedRoute> },
       {
         path: 'upload-cv',
         element: (
